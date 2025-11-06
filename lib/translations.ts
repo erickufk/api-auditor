@@ -1,0 +1,493 @@
+export type Language = "en" | "ru"
+
+export const translations = {
+  en: {
+    // Header
+    appTitle: "API Security Auditor",
+    appSubtitle: "AI-Powered Security Testing",
+
+    // Welcome Step
+    welcomeTitle: "API Security Auditor",
+    welcomeSubtitle: "AI-powered security testing for your APIs. Discover vulnerabilities before attackers do.",
+    agenticModeTitle: "Agentic Mode",
+    agenticModeDesc:
+      "AI agent autonomously explores your API, discovers endpoints, and executes comprehensive security tests",
+    manualModeTitle: "Manual Mode",
+    manualModeDesc: "Test specific endpoints with precise control over requests, headers, and authentication methods",
+    reportsTitle: "Comprehensive Reports",
+    reportsDesc: "Detailed vulnerability analysis with severity ratings, remediation steps, and downloadable reports",
+    whatYouGetTitle: "What You'll Get",
+    feature1:
+      "Multi-stage security analysis covering authentication, authorization, input validation, and business logic",
+    feature2: "Real-time progress tracking with detailed logs of all requests and responses",
+    feature3: "Actionable remediation guidance with CWE IDs and CVSS scores",
+    getStarted: "Get Started",
+
+    // Project Mode Step
+    projectSetup: "Project Setup",
+    projectName: "Project Name",
+    projectNamePlaceholder: "My API Security Audit",
+    projectDescription: "Project Description",
+    projectDescPlaceholder: "Describe what you are testing...",
+    selectMode: "Select Testing Mode",
+    agenticMode: "Agentic Mode",
+    agenticModeFullDesc: "AI agent autonomously tests your API with intelligent exploration",
+    manualMode: "Manual Mode",
+    manualModeFullDesc: "Manually configure and test specific endpoints",
+    next: "Next",
+    back: "Back",
+
+    // Auth Config Step
+    authConfig: "Authentication Configuration",
+    authOptional: "Configure authentication if your API requires it",
+    skipAuth: "Skip Authentication",
+    skipAuthDesc: "Test public endpoints without authentication",
+    configureAuth: "Configure Authentication",
+    configureAuthDesc: "Add authentication for protected endpoints",
+    authMethod: "Authentication Method",
+    noAuth: "No Authentication",
+    bearerToken: "Bearer Token",
+    apiKey: "API Key",
+    basicAuth: "Basic Authentication",
+    oauth2: "OAuth 2.0",
+    token: "Token",
+    tokenPlaceholder: "Enter your bearer token",
+    apiKeyLocation: "API Key Location",
+    header: "Header",
+    queryParam: "Query Parameter",
+    keyName: "Key Name",
+    keyNamePlaceholder: "X-API-Key",
+    keyValue: "Key Value",
+    keyValuePlaceholder: "Enter your API key",
+    username: "Username",
+    usernamePlaceholder: "Enter username",
+    password: "Password",
+    passwordPlaceholder: "Enter password",
+    clientId: "Client ID",
+    clientIdPlaceholder: "Enter client ID",
+    clientSecret: "Client Secret",
+    clientSecretPlaceholder: "Enter client secret",
+    tokenEndpoint: "Token Endpoint",
+    tokenEndpointPlaceholder: "https://api.example.com/oauth/token",
+    scope: "Scope",
+    scopePlaceholder: "read write",
+    loginFlow: "Login Flow (Optional)",
+    loginFlowDesc: "Authenticate by calling a login endpoint first",
+    enableLogin: "Enable Login Flow",
+    loginEndpoint: "Login Endpoint",
+    loginEndpointPlaceholder: "https://api.example.com/auth/login",
+    loginMethod: "Login Method",
+    loginUsername: "Login Username",
+    loginPassword: "Login Password",
+
+    // Agentic Config Step
+    agenticConfig: "Agentic Mode Configuration",
+    inputMethod: "Input Method",
+    uploadFile: "Upload OpenAPI File",
+    uploadFileDesc: "Upload a Swagger/OpenAPI specification file",
+    singleEndpoint: "Single Endpoint",
+    singleEndpointDesc: "Start from a single endpoint and let AI explore",
+    uploadSpec: "Upload OpenAPI Specification",
+    dragDrop: "Drag and drop your OpenAPI file here, or click to browse",
+    supportedFormats: "Supported formats: JSON, YAML",
+    endpointUrl: "Endpoint URL",
+    endpointUrlPlaceholder: "https://api.example.com/users",
+    httpMethod: "HTTP Method",
+    queryParams: "Query Parameters",
+    addQueryParam: "Add Query Parameter",
+    headers: "Headers",
+    addHeader: "Add Header",
+    requestBody: "Request Body (JSON)",
+    requestBodyPlaceholder: '{"key": "value"}',
+    agenticSettings: "Agentic Settings",
+    maxIterations: "Max Iterations",
+    iterationsDesc: "Maximum number of test iterations the AI agent will perform",
+    stopOnVuln: "Stop on First Vulnerability",
+    stopOnVulnDesc: "Stop testing when a vulnerability is found",
+    aggressiveness: "Aggressiveness Level",
+    aggressivenessDesc: "Controls the intensity of security test payloads",
+    aggressivenessLow: "Low - Conservative testing",
+    aggressivenessMedium: "Medium - Balanced approach",
+    aggressivenessHigh: "High - Aggressive payloads",
+    enableFuzzing: "Enable Fuzzing",
+    enableFuzzingDesc: "Generate malformed inputs to test API stability and error handling",
+    fuzzingIntensity: "Fuzzing Intensity",
+    fuzzingIntensityDesc: "Controls the variety and aggressiveness of fuzzing payloads",
+    fuzzingLow: "Low - Basic boundary testing",
+    fuzzingMedium: "Medium - Comprehensive fuzzing",
+    fuzzingHigh: "High - Aggressive fuzzing with all payload types",
+    enableOpenDoors: "Enable Open Doors Detection",
+    enableOpenDoorsDesc: "Check for unsecured endpoints, debug interfaces, and default credentials",
+    agenticWarning:
+      "Agentic mode will make multiple API requests automatically. The AI agent will explore the endpoint, modify parameters, inject payloads, and test for vulnerabilities autonomously.",
+    noHeaders: "No headers added",
+    noQueryParams: "No query parameters added",
+    requestBodyDesc: "Optional JSON body for POST/PUT/PATCH requests",
+    startTesting: "Start Testing",
+    stopTesting: "Stop Testing",
+    testingStopped: "Testing stopped by user",
+    stoppingTest: "Stopping test...",
+
+    // Manual Config Step
+    manualConfig: "Manual Test Configuration",
+    manualConfigDesc: "Configure your API endpoint test",
+
+    // Progress Tracker
+    running: "Running",
+    completed: "Completed",
+    failed: "Failed",
+    pending: "Pending",
+
+    // Report Display
+    securityReport: "Security Report",
+    project: "Project",
+    testedOn: "Tested on",
+    summary: "Summary",
+    totalVulnerabilities: "Total Vulnerabilities",
+    critical: "Critical",
+    high: "High",
+    medium: "Medium",
+    low: "Low",
+    info: "Info",
+    downloadReport: "Download Report",
+    downloadJson: "Download JSON",
+    downloadText: "Download TXT",
+    vulnerabilities: "Vulnerabilities",
+    severity: "Severity",
+    category: "Category",
+    description: "Description",
+    remediation: "Remediation",
+    newTest: "New Test",
+
+    recommendedFollowUpTests: "Recommended Follow-up Tests",
+    recommendedTestsDesc: "AI-suggested tests to explore potential vulnerabilities further",
+    testType: "Test Type",
+    payload: "Payload",
+    reasoning: "Reasoning",
+    potentialVulnerabilities: "Potential Vulnerabilities to Explore",
+    potentialVulnDesc: "Hypothesized vulnerabilities based on endpoint analysis",
+    likelihood: "Likelihood",
+    testApproach: "Test Approach",
+    noRecommendations: "No follow-up tests recommended",
+    noPotentialVuln: "No potential vulnerabilities identified",
+
+    apiError: "API Configuration Error",
+    geminiApiDisabled: "Google Generative Language API is not enabled",
+    geminiApiInstructions:
+      "To use your Google Gemini API key, you need to enable the Generative Language API in your Google Cloud Console:",
+    step1: "1. Visit the activation URL provided in the error",
+    step2: "2. Click 'Enable' to activate the API",
+    step3: "3. Wait a few minutes for the changes to propagate",
+    step4: "4. Try running the test again",
+    alternativeSolution:
+      "Alternative: Remove the GOOGLE_GENERATIVE_AI_API_KEY environment variable to use the default AI Gateway (requires credit card on Vercel account)",
+
+    // Landing Page
+    landingBadge: "AI-Powered Security Testing",
+    landingHeroTitle: "Discover API Vulnerabilities Before Attackers Do",
+    landingHeroSubtitle:
+      "Advanced AI-powered security testing with autonomous agentic exploration and precise manual control. Comprehensive vulnerability detection with actionable insights.",
+
+    landingFeature1Title: "Comprehensive Security Analysis",
+    landingFeature1Desc:
+      "Multi-stage analysis covering authentication, authorization, input validation, data exposure, and business logic vulnerabilities.",
+
+    landingFeature2Title: "AI-Powered Intelligence",
+    landingFeature2Desc:
+      "Leverages Google Gemini AI to autonomously discover attack vectors and generate intelligent test scenarios.",
+
+    landingFeature3Title: "Detailed Reports",
+    landingFeature3Desc:
+      "Professional security reports with severity ratings, CWE mappings, remediation guidance, and follow-up test recommendations.",
+
+    landingModesTitle: "Choose Your Testing Approach",
+    landingModesSubtitle: "Select the mode that best fits your security testing needs",
+
+    landingAgenticDesc: "Autonomous AI agent that explores and tests your API intelligently",
+    landingAgenticFeature1: "Autonomous endpoint discovery and exploration",
+    landingAgenticFeature2: "Iterative testing with AI-generated attack scenarios",
+    landingAgenticFeature3: "Intelligent follow-up tests based on findings",
+    landingAgenticFeature4: "Comprehensive coverage with minimal configuration",
+
+    landingManualDesc: "Precise control over individual endpoint testing with AI-powered recommendations",
+    landingManualFeature1: "Full control over request configuration",
+    landingManualFeature2: "AI-suggested follow-up tests (non-automated)",
+    landingManualFeature3: "Detailed vulnerability hypotheses",
+    landingManualFeature4: "Safe for production environments",
+
+    landingBestFor: "Best for:",
+    landingAgenticBestFor:
+      "Development/staging environments, comprehensive audits, discovering unknown vulnerabilities",
+    landingManualBestFor: "Production APIs, targeted testing, compliance requirements, learning security testing",
+
+    landingApproachTitle: "Our Security Testing Approach",
+    landingApproachSubtitle: "Built on industry best practices and cutting-edge AI technology",
+
+    landingApproach1Title: "OWASP API Security Top 10",
+    landingApproach1Desc:
+      "Tests aligned with OWASP API Security Top 10 guidelines, covering broken authentication, excessive data exposure, injection attacks, and more.",
+
+    landingApproach2Title: "AI-Driven Test Generation",
+    landingApproach2Desc:
+      "Uses Google Gemini AI to analyze responses, identify patterns, and generate contextually relevant security tests.",
+
+    landingApproach3Title: "Multi-Layer Vulnerability Detection",
+    landingApproach3Desc:
+      "Detects vulnerabilities across authentication, authorization, input validation, rate limiting, encryption, and business logic layers.",
+
+    landingApproach4Title: "Actionable Intelligence",
+    landingApproach4Desc:
+      "Every finding includes severity rating, detailed description, remediation steps, and CWE/CVSS references for prioritization.",
+
+    landingCtaTitle: "Ready to Secure Your API?",
+    landingCtaSubtitle: "Start your comprehensive security audit in minutes",
+  },
+  ru: {
+    // Header
+    appTitle: "Аудитор Безопасности API",
+    appSubtitle: "Тестирование безопасности с ИИ",
+
+    // Welcome Step
+    welcomeTitle: "Аудитор Безопасности API",
+    welcomeSubtitle:
+      "Тестирование безопасности API с помощью ИИ. Обнаруживайте уязвимости до того, как это сделают злоумышленники.",
+    agenticModeTitle: "Агентный режим",
+    agenticModeDesc:
+      "ИИ-агент автономно исследует ваш API, обнаруживает конечные точки и выполняет комплексные тесты безопасности",
+    manualModeTitle: "Ручной режим",
+    manualModeDesc:
+      "Тестируйте конкретные конечные точки с точным контролем запросов, заголовков и методов аутентификации",
+    reportsTitle: "Подробные отчеты",
+    reportsDesc: "Детальный анализ уязвимостей с оценкой серьезности, шагами по устранению и загружаемыми отчетами",
+    whatYouGetTitle: "Что вы получите",
+    feature1:
+      "Многоэтапный анализ безопасности, охватывающий аутентификацию, авторизацию, проверку ввода и бизнес-логику",
+    feature2: "Отслеживание прогресса в реальном времени с подробными журналами всех запросов и ответов",
+    feature3: "Практические рекомендации по устранению с идентификаторами CWE и оценками CVSS",
+    getStarted: "Начать",
+
+    // Project Mode Step
+    projectSetup: "Настройка проекта",
+    projectName: "Название проекта",
+    projectNamePlaceholder: "Мой аудит безопасности API",
+    projectDescription: "Описание проекта",
+    projectDescPlaceholder: "Опишите, что вы тестируете...",
+    selectMode: "Выберите режим тестирования",
+    agenticMode: "Агентный режим",
+    agenticModeFullDesc: "ИИ-агент автономно тестирует ваш API с интеллектуальным исследованием",
+    manualMode: "Ручной режим",
+    manualModeFullDesc: "Вручную настройте и протестируйте конкретные конечные точки",
+    next: "Далее",
+    back: "Назад",
+
+    // Auth Config Step
+    authConfig: "Настройка аутентификации",
+    authOptional: "Настройте аутентификацию, если ваш API требует этого",
+    skipAuth: "Пропустить аутентификацию",
+    skipAuthDesc: "Тестировать публичные конечные точки без аутентификации",
+    configureAuth: "Настроить аутентификацию",
+    configureAuthDesc: "Добавить аутентификацию для защищенных конечных точек",
+    authMethod: "Метод аутентификации",
+    noAuth: "Без аутентификации",
+    bearerToken: "Bearer токен",
+    apiKey: "API ключ",
+    basicAuth: "Базовая аутентификация",
+    oauth2: "OAuth 2.0",
+    token: "Токен",
+    tokenPlaceholder: "Введите ваш bearer токен",
+    apiKeyLocation: "Расположение API ключа",
+    header: "Заголовок",
+    queryParam: "Параметр запроса",
+    keyName: "Имя ключа",
+    keyNamePlaceholder: "X-API-Key",
+    keyValue: "Значение ключа",
+    keyValuePlaceholder: "Введите ваш API ключ",
+    username: "Имя пользователя",
+    usernamePlaceholder: "Введите имя пользователя",
+    password: "Пароль",
+    passwordPlaceholder: "Введите пароль",
+    clientId: "ID клиента",
+    clientIdPlaceholder: "Введите ID клиента",
+    clientSecret: "Секрет клиента",
+    clientSecretPlaceholder: "Введите секрет клиента",
+    tokenEndpoint: "Конечная точка токена",
+    tokenEndpointPlaceholder: "https://api.example.com/oauth/token",
+    scope: "Область",
+    scopePlaceholder: "read write",
+    loginFlow: "Процесс входа (необязательно)",
+    loginFlowDesc: "Аутентификация путем вызова конечной точки входа сначала",
+    enableLogin: "Включить процесс входа",
+    loginEndpoint: "Конечная точка входа",
+    loginEndpointPlaceholder: "https://api.example.com/auth/login",
+    loginMethod: "Метод входа",
+    loginUsername: "Имя пользователя для входа",
+    loginPassword: "Пароль для входа",
+
+    // Agentic Config Step
+    agenticConfig: "Настройка агентного режима",
+    inputMethod: "Метод ввода",
+    uploadFile: "Загрузить файл OpenAPI",
+    uploadFileDesc: "Загрузите файл спецификации Swagger/OpenAPI",
+    singleEndpoint: "Одна конечная точка",
+    singleEndpointDesc: "Начните с одной конечной точки и позвольте ИИ исследовать",
+    uploadSpec: "Загрузить спецификацию OpenAPI",
+    dragDrop: "Перетащите файл OpenAPI сюда или нажмите для выбора",
+    supportedFormats: "Поддерживаемые форматы: JSON, YAML",
+    endpointUrl: "URL конечной точки",
+    endpointUrlPlaceholder: "https://api.example.com/users",
+    httpMethod: "HTTP метод",
+    queryParams: "Параметры запроса",
+    addQueryParam: "Добавить параметр запроса",
+    headers: "Заголовки",
+    addHeader: "Добавить заголовок",
+    requestBody: "Тело запроса (JSON)",
+    requestBodyPlaceholder: '{"key": "value"}',
+    requestBodyDesc: "Необязательное тело JSON для запросов POST/PUT/PATCH",
+    agenticSettings: "Настройки агента",
+    maxIterations: "Макс. итераций",
+    iterationsDesc: "Максимальное количество тестовых итераций, которые выполнит ИИ-агент",
+    stopOnVuln: "Остановить при первой уязвимости",
+    stopOnVulnDesc: "Остановить тестирование при обнаружении уязвимости",
+    aggressiveness: "Уровень агрессивности",
+    aggressivenessDesc: "Контролирует интенсивность тестовых полезных нагрузок безопасности",
+    aggressivenessLow: "Низкий - Консервативное тестирование",
+    aggressivenessMedium: "Средний - Сбалансированный подход",
+    aggressivenessHigh: "Высокий - Агрессивные полезные нагрузки",
+    enableFuzzing: "Включить фаззинг",
+    enableFuzzingDesc: "Генерировать некорректные входные данные для тестирования стабильности API и обработки ошибок",
+    fuzzingIntensity: "Интенсивность фаззинга",
+    fuzzingIntensityDesc: "Контролирует разнообразие и агрессивность полезных нагрузок фаззинга",
+    fuzzingLow: "Низкий - Базовое граничное тестирование",
+    fuzzingMedium: "Средний - Комплексный фаззинг",
+    fuzzingHigh: "Высокий - Агрессивный фаззинг со всеми типами полезных нагрузок",
+    enableOpenDoors: "Включить обнаружение открытых дверей",
+    enableOpenDoorsDesc: "Проверить незащищенные конечные точки, отладочные интерфейсы и учетные данные по умолчанию",
+    agenticWarning:
+      "Агентный режим будет автоматически выполнять несколько API-запросов. ИИ-агент будет исследовать конечную точку, изменять параметры, внедрять полезные нагрузки и автономно тестировать уязвимости.",
+    noHeaders: "Заголовки не добавлены",
+    noQueryParams: "Параметры запроса не добавлены",
+    startTesting: "Начать тестирование",
+    stopTesting: "Остановить тестирование",
+    testingStopped: "Тестирование остановлено пользователем",
+    stoppingTest: "Остановка теста...",
+
+    // Manual Config Step
+    manualConfig: "Настройка ручного теста",
+    manualConfigDesc: "Настройте тест конечной точки API",
+
+    // Progress Tracker
+    running: "Выполняется",
+    completed: "Завершено",
+    failed: "Ошибка",
+    pending: "Ожидание",
+
+    // Report Display
+    securityReport: "Отчет о безопасности",
+    project: "Проект",
+    testedOn: "Протестировано",
+    summary: "Сводка",
+    totalVulnerabilities: "Всего уязвимостей",
+    critical: "Критический",
+    high: "Высокий",
+    medium: "Средний",
+    low: "Низкий",
+    info: "Информация",
+    downloadReport: "Скачать отчет",
+    downloadJson: "Скачать JSON",
+    downloadText: "Скачать TXT",
+    vulnerabilities: "Уязвимости",
+    severity: "Серьезность",
+    category: "Категория",
+    description: "Описание",
+    remediation: "Устранение",
+    newTest: "Новый тест",
+
+    recommendedFollowUpTests: "Рекомендуемые последующие тесты",
+    recommendedTestsDesc: "Тесты, предложенные ИИ для дальнейшего изучения потенциальных уязвимостей",
+    testType: "Тип теста",
+    payload: "Полезная нагрузка",
+    reasoning: "Обоснование",
+    potentialVulnerabilities: "Потенциальные уязвимости для изучения",
+    potentialVulnDesc: "Предполагаемые уязвимости на основе анализа конечной точки",
+    likelihood: "Вероятность",
+    testApproach: "Подход к тестированию",
+    noRecommendations: "Последующие тесты не рекомендованы",
+    noPotentialVuln: "Потенциальные уязвимости не выявлены",
+
+    apiError: "Ошибка конфигурации API",
+    geminiApiDisabled: "Google Generative Language API не включен",
+    geminiApiInstructions:
+      "Чтобы использовать ваш ключ Google Gemini API, необходимо включить Generative Language API в консоли Google Cloud:",
+    step1: "1. Перейдите по URL активации, указанному в ошибке",
+    step2: "2. Нажмите 'Включить', чтобы активировать API",
+    step3: "3. Подождите несколько минут, пока изменения вступят в силу",
+    step4: "4. Попробуйте запустить тест снова",
+    alternativeSolution:
+      "Альтернатива: Удалите переменную окружения GOOGLE_GENERATIVE_AI_API_KEY, чтобы использовать AI Gateway по умолчанию (требуется кредитная карта в аккаунте Vercel)",
+
+    // Landing Page
+    landingBadge: "Тестирование безопасности с ИИ",
+    landingHeroTitle: "Обнаруживайте уязвимости API до того, как это сделают злоумышленники",
+    landingHeroSubtitle:
+      "Продвинутое тестирование безопасности с помощью ИИ с автономным агентным исследованием и точным ручным управлением. Комплексное обнаружение уязвимостей с практическими рекомендациями.",
+
+    landingFeature1Title: "Комплексный анализ безопасности",
+    landingFeature1Desc:
+      "Многоэтапный анализ, охватывающий аутентификацию, авторизацию, проверку ввода, утечку данных и уязвимости бизнес-логики.",
+
+    landingFeature2Title: "Интеллект на основе ИИ",
+    landingFeature2Desc:
+      "Использует Google Gemini AI для автономного обнаружения векторов атак и генерации интеллектуальных тестовых сценариев.",
+
+    landingFeature3Title: "Подробные отчеты",
+    landingFeature3Desc:
+      "Профессиональные отчеты о безопасности с оценкой серьезности, сопоставлением CWE, рекомендациями по устранению и предложениями последующих тестов.",
+
+    landingModesTitle: "Выберите подход к тестированию",
+    landingModesSubtitle:
+      "Выберите режим, который лучше всего соответствует вашим потребностям в тестировании безопасности",
+
+    landingAgenticDesc: "Автономный ИИ-агент, который интеллектуально исследует и тестирует ваш API",
+    landingAgenticFeature1: "Автономное обнаружение и исследование конечных точек",
+    landingAgenticFeature2: "Итеративное тестирование со сценариями атак, созданными ИИ",
+    landingAgenticFeature3: "Интеллектуальные последующие тесты на основе находок",
+    landingAgenticFeature4: "Комплексное покрытие с минимальной настройкой",
+
+    landingManualDesc: "Точный контроль над тестированием отдельных конечных точек с рекомендациями на основе ИИ",
+    landingManualFeature1: "Полный контроль над конфигурацией запроса",
+    landingManualFeature2: "Предложенные ИИ последующие тесты (неавтоматизированные)",
+    landingManualFeature3: "Детальные гипотезы об уязвимостях",
+    landingManualFeature4: "Безопасно для производственных сред",
+
+    landingBestFor: "Лучше всего для:",
+    landingAgenticBestFor: "Среды разработки/тестирования, комплексные аудиты, обнаружение неизвестных уязвимостей",
+    landingManualBestFor:
+      "Производственные API, целевое тестирование, требования соответствия, обучение тестированию безопасности",
+
+    landingApproachTitle: "Наш подход к тестированию безопасности",
+    landingApproachSubtitle: "Основан на лучших отраслевых практиках и передовых технологиях ИИ",
+
+    landingApproach1Title: "OWASP API Security Top 10",
+    landingApproach1Desc:
+      "Тесты соответствуют рекомендациям OWASP API Security Top 10, охватывая нарушенную аутентификацию, избыточное раскрытие данных, атаки инъекций и многое другое.",
+
+    landingApproach2Title: "Генерация тестов на основе ИИ",
+    landingApproach2Desc:
+      "Использует Google Gemini AI для анализа ответов, выявления паттернов и генерации контекстно релевантных тестов безопасности.",
+
+    landingApproach3Title: "Многоуровневое обнаружение уязвимостей",
+    landingApproach3Desc:
+      "Обнаруживает уязвимости на уровнях аутентификации, авторизации, проверки ввода, ограничения скорости, шифрования и бизнес-логики.",
+
+    landingApproach4Title: "Практические рекомендации",
+    landingApproach4Desc:
+      "Каждая находка включает оценку серьезности, подробное описание, шаги по устранению и ссылки CWE/CVSS для приоритизации.",
+
+    landingCtaTitle: "Готовы защитить свой API?",
+    landingCtaSubtitle: "Начните комплексный аудит безопасности за несколько минут",
+  },
+}
+
+export function getTranslation(lang: Language, key: keyof typeof translations.en): string {
+  return translations[lang][key] || translations.en[key]
+}

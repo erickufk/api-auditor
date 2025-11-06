@@ -1,0 +1,83 @@
+/**
+ * POINTER AI DESIGN SYSTEM
+ * Copy this entire file into your project's globals.css
+ * This includes all color variables, animations, and base styles
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* === BACKGROUND & FOREGROUND === */
+    --background: 210 11% 7%; /* #0f1211 - Deep dark background */
+    --foreground: 160 14% 93%; /* #e7eceb - Light text color */
+
+    /* === MUTED COLORS === */
+    --muted: 240 2% 16%; /* #27272a - Muted backgrounds */
+    --muted-foreground: 160 14% 93% / 0.7; /* Semi-transparent text */
+    --muted-foreground-light: 160 14% 93% / 0.5;
+    --muted-foreground-dark: 160 14% 93% / 0.6;
+
+    /* === CARD COLORS === */
+    --card: 220 17% 98% / 0.01; /* Nearly transparent card background */
+    --card-foreground: 160 14% 93%;
+
+    /* === POPOVER COLORS === */
+    --popover: 210 11% 7%;
+    --popover-foreground: 160 14% 93%;
+
+    /* === PRIMARY ACCENT (Teal/Green) === */
+    --primary: 165 96% 71%; /* #78fcd6 - Main teal accent */
+    --primary-foreground: 160 8% 6%; /* #0d0f0e - Dark text on primary */
+    --primary-dark: 160 100% 50%; /* #00ffb6 - Darker teal variant */
+    --primary-light: 160 48% 87%; /* Lighter teal for gradients */
+
+    /* === SECONDARY ACCENT === */
+    --secondary: 160 14% 93%; /* #e7eceb - Light buttons */
+    --secondary-foreground: 165 14% 8%; /* #141a18 - Dark text on secondary */
+
+    /* === ACCENT COLORS === */
+    --accent: 240 2% 25%; /* #3f3f42 */
+    --accent-foreground: 240 2% 96%; /* #f4f4f5 */
+
+    /* === BORDERS === */
+    --border: 240 100% 100% / 0.08; /* White with 8% opacity */
+    --border-light: 210 17% 6% / 0.1;
+    --border-dark: 210 17% 6% / 0.05;
+
+    /* === FOCUS RING === */
+    --ring: 165 96% 71%; /* Same as primary */
+
+    /* === BORDER RADIUS === */
+    --radius: 0.5rem; /* 8px default radius */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* === CUSTOM ANIMATIONS === */
+@layer utilities {
+  /* Glassmorphism effect for cards */
+  .glass-card {
+    background: rgba(231, 236, 235, 0.08);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  /* Gradient blur effect */
+  .gradient-blur {
+    filter: blur(130px);
+    opacity: 0.1;
+  }
+}
