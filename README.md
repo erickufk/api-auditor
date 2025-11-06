@@ -60,8 +60,7 @@ API Security Auditor - это интеллектуальный инструме�
 - Recharts (визуализация данных)
 
 ### Структура проекта
-
-\`\`\`
+```
 api-security-auditor/
 ├── app/
 │   ├── api/                          # API Routes
@@ -98,23 +97,23 @@ api-security-auditor/
 │   └── utils.ts                       # Утилиты
 │
 └── public/                            # Статические файлы
-\`\`\`
 
+```
 ### Архитектура компонентов
 
 #### 1. Workflow Engine
 
 Система использует пошаговый workflow для проведения аудита:
 
-\`\`\`
+```
 Landing → Welcome → Mode Selection → Project Mode → Auth Config → Test Config → Testing → Report
-\`\`\`
+```
 
 Каждый шаг управляется через состояние в главном компоненте `app/page.tsx`.
 
 #### 2. Агентный режим (Agentic Workflow)
 
-\`\`\`typescript
+```typescript
 // Основной цикл агентного тестирования
 runAgenticWorkflow(initialRequest, config) {
   1. Выполнить начальный запрос
@@ -128,7 +127,7 @@ runAgenticWorkflow(initialRequest, config) {
      - Проверить условия остановки
   5. Сформировать итоговый отчет
 }
-\`\`\`
+```
 
 **Ключевые особенности:**
 - Итеративное тестирование с обучением на предыдущих результатах
@@ -138,7 +137,7 @@ runAgenticWorkflow(initialRequest, config) {
 
 #### 3. Ручной режим (Manual Workflow)
 
-\`\`\`typescript
+```typescript
 // Процесс ручного тестирования
 analyzeManualTest(testData) {
   1. Получить request/response пару
@@ -148,7 +147,7 @@ analyzeManualTest(testData) {
   5. Предложить follow-up тесты
   6. Вернуть детальный отчет
 }
-\`\`\`
+```
 
 **Ключевые особенности:**
 - Тестирование одного эндпоинта за раз
@@ -160,14 +159,14 @@ analyzeManualTest(testData) {
 
 Поддерживает полный цикл аутентификации:
 
-\`\`\`typescript
+```typescript
 // Процесс аутентификации
 1. Пользователь вводит данные для аутентификации
 2. Система выполняет запрос к auth endpoint
 3. Автоматически извлекает токен из ответа
 4. Токен используется во всех последующих запросах
 5. Опциональная верификация токена
-\`\`\`
+```
 
 **Поддерживаемые методы:**
 - **Bearer Token**: Токен в заголовке `Authorization: Bearer <token>`
@@ -179,10 +178,10 @@ analyzeManualTest(testData) {
 
 Все внешние запросы проходят через серверные API routes для обхода CORS:
 
-\`\`\`
+```
 Client → /api/execute-auth → External API
 Client → /api/test-endpoint → External API
-\`\`\`
+```
 
 Это позволяет:
 - Обходить CORS ограничения
@@ -209,7 +208,7 @@ Client → /api/test-endpoint → External API
 
 Система генерирует детальный отчет в формате:
 
-\`\`\`typescript
+```typescript
 {
   scan_id: string
   timestamp: string
@@ -239,7 +238,7 @@ Client → /api/test-endpoint → External API
   }
   recommendations: string[]
 }
-\`\`\`
+```
 
 ## Установка и запуск
 
@@ -251,7 +250,7 @@ Client → /api/test-endpoint → External API
 
 ### Установка
 
-\`\`\`bash
+```bash
 # Клонировать репозиторий
 git clone <repository-url>
 cd api-security-auditor
@@ -261,31 +260,31 @@ pnpm install
 
 # Настроить переменные окружения
 cp .env.example .env.local
-\`\`\`
+```
 
 ### Настройка переменных окружения
 
 Создайте файл `.env.local`:
 
-\`\`\`env
+```env
 # Google Generative AI API Key
 GOOGLE_GENERATIVE_AI_API_KEY=your_api_key_here
-\`\`\`
+```
 
 ### Запуск в режиме разработки
 
-\`\`\`bash
+```bash
 pnpm dev
-\`\`\`
+```
 
 Приложение будет доступно по адресу: `http://localhost:3000`
 
 ### Сборка для продакшена
 
-\`\`\`bash
+```bash
 pnpm build
 pnpm start
-\`\`\`
+```
 
 ## Использование
 
@@ -333,31 +332,31 @@ pnpm start
 Прокси для выполнения запросов аутентификации.
 
 **Request:**
-\`\`\`json
+```json
 {
   "url": "string",
   "method": "POST" | "GET",
   "headers": {},
   "body": "string"
 }
-\`\`\`
+```
 
 **Response:**
-\`\`\`json
+```json
 {
   "status": number,
   "statusText": "string",
   "headers": {},
   "body": "string"
 }
-\`\`\`
+```
 
 ### POST /api/test-endpoint
 
 Прокси для тестирования эндпоинтов.
 
 **Request:**
-\`\`\`json
+```json
 {
   "url": "string",
   "method": "string",
@@ -365,29 +364,29 @@ pnpm start
   "queryParams": {},
   "body": "string"
 }
-\`\`\`
+```
 
 **Response:**
-\`\`\`json
+```json
 {
   "status": number,
   "statusText": "string",
   "headers": {},
   "body": "string"
 }
-\`\`\`
+```
 
 ### POST /api/analyze-manual-test
 
 Анализ результатов ручного теста.
 
 **Request:**
-\`\`\`json
+```json
 {
   "request": ManualTestRequest,
   "response": ManualTestResponse
 }
-\`\`\`
+```
 
 **Response:** SecurityReport
 
@@ -396,7 +395,7 @@ pnpm start
 Анализ итерации агентного тестирования.
 
 **Request:**
-\`\`\`json
+```json
 {
   "request": ManualTestRequest,
   "response": ManualTestResponse,
@@ -404,10 +403,10 @@ pnpm start
   "aggressiveness": "low" | "medium" | "high",
   "iterationNumber": number
 }
-\`\`\`
+```
 
 **Response:**
-\`\`\`json
+```json
 {
   "analysis": "string",
   "vulnerabilitiesFound": Vulnerability[],
@@ -415,7 +414,7 @@ pnpm start
   "shouldContinue": boolean,
   "followUpTests": FollowUpTest[]
 }
-\`\`\`
+```
 
 ## Безопасность
 
