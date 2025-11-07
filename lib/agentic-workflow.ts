@@ -214,3 +214,21 @@ export function getTestedEndpoint(iterations: AgenticIteration[]): string {
   const firstIteration = iterations[0]
   return `${firstIteration.request.method} ${firstIteration.request.url}`
 }
+
+export function getAllTestedEndpoints(iterations: AgenticIteration[]): Array<{ method: string; url: string }> {
+  const endpointSet = new Set<string>()
+  const endpoints: Array<{ method: string; url: string }> = []
+
+  iterations.forEach((iteration) => {
+    const key = `${iteration.request.method}::${iteration.request.url}`
+    if (!endpointSet.has(key)) {
+      endpointSet.add(key)
+      endpoints.push({
+        method: iteration.request.method,
+        url: iteration.request.url,
+      })
+    }
+  })
+
+  return endpoints
+}

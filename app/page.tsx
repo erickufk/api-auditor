@@ -33,7 +33,11 @@ import { sessionStorage } from "@/lib/session-storage"
 import { toast } from "@/hooks/use-toast"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { runAgenticWorkflow as executeAgenticWorkflow, getTestedEndpoint } from "@/lib/agentic-workflow"
+import {
+  runAgenticWorkflow as executeAgenticWorkflow,
+  getTestedEndpoint,
+  getAllTestedEndpoints,
+} from "@/lib/agentic-workflow"
 import { parseOpenAPISpec, buildEndpointUrl } from "@/lib/openapi-parser"
 
 type WizardStep = "landing" | "welcome" | "project-mode" | "auth" | "config" | "running" | "results"
@@ -272,6 +276,8 @@ export default function Home() {
 
       console.log("[v0] Agentic workflow completed:", result)
 
+      const allEndpoints = getAllTestedEndpoints(result.iterations)
+
       // Convert agentic result to security report format
       const report: SecurityReport = {
         scan_id: `agentic-${Date.now()}`,
@@ -279,7 +285,7 @@ export default function Home() {
         api_name: projectMetadata?.name || "API Security Test",
         tested_endpoint: getTestedEndpoint(result.iterations),
         overall_risk_score: calculateOverallRisk(result.totalVulnerabilities),
-        endpoints_scanned: 1,
+        endpoints_scanned: allEndpoints.length,
         vulnerabilities_found: result.totalVulnerabilities.length,
         vulnerabilities: result.totalVulnerabilities,
         summary: {
@@ -447,6 +453,8 @@ export default function Home() {
         })),
       }
 
+      const allEndpoints = getAllTestedEndpoints(consolidatedResult.iterations)
+
       // Convert to security report format
       const report: SecurityReport = {
         scan_id: `agentic-file-${Date.now()}`,
@@ -457,7 +465,7 @@ export default function Home() {
             ? getTestedEndpoint(consolidatedResult.iterations)
             : "Multiple endpoints",
         overall_risk_score: calculateOverallRisk(allVulnerabilities),
-        endpoints_scanned: parsedSpec.endpoints.length,
+        endpoints_scanned: allEndpoints.length,
         vulnerabilities_found: allVulnerabilities.length,
         vulnerabilities: allVulnerabilities,
         summary: {
@@ -809,7 +817,7 @@ export default function Home() {
             report={session.report}
             onStartNew={handleStartNew}
             testMode={selectedMode || undefined}
-            onTestAnother={selectedMode === "manual" ? handleTestAnother : undefined}
+            onTestAnother={handleTestAnother}
             projectMetadata={projectMetadata}
             agenticResult={session.agenticResult}
           />

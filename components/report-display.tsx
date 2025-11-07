@@ -152,6 +152,49 @@ export function ReportDisplay({
     })
   }
 
+  const getTestedEndpoints = () => {
+    const endpoints: Array<{ method: string; url: string; issuesCount: number }> = []
+
+    if (agenticResult?.iterations && agenticResult.iterations.length > 0) {
+      // Group iterations by endpoint
+      const endpointMap = new Map<string, { method: string; url: string; issues: number }>()
+
+      agenticResult.iterations.forEach((iteration: any) => {
+        const key = `${iteration.request.method} ${iteration.request.url}`
+        if (!endpointMap.has(key)) {
+          endpointMap.set(key, {
+            method: iteration.request.method,
+            url: iteration.request.url,
+            issues: iteration.vulnerabilitiesFound?.length || 0,
+          })
+        } else {
+          const existing = endpointMap.get(key)!
+          existing.issues += iteration.vulnerabilitiesFound?.length || 0
+        }
+      })
+
+      endpointMap.forEach((value) => {
+        endpoints.push({
+          method: value.method,
+          url: value.url,
+          issuesCount: value.issues,
+        })
+      })
+    } else if (report.tested_endpoint && report.tested_endpoint !== "N/A") {
+      // For single endpoint tests
+      const [method, ...urlParts] = report.tested_endpoint.split(" ")
+      endpoints.push({
+        method: method || "GET",
+        url: urlParts.join(" ") || report.tested_endpoint,
+        issuesCount: report.vulnerabilities_found,
+      })
+    }
+
+    return endpoints
+  }
+
+  const testedEndpoints = getTestedEndpoints()
+
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-8 flex items-center justify-between">
@@ -160,13 +203,13 @@ export function ReportDisplay({
           <p className="text-pretty text-muted-foreground">Comprehensive analysis of your API security</p>
         </div>
         <div className="flex gap-2">
-          {testMode === "manual" && onTestAnother && (
+          {onTestAnother && (
             <Button onClick={onTestAnother} variant="default">
-              📄 Test Another Endpoint
+              🔄 Test Another Endpoint
             </Button>
           )}
           <Button onClick={onStartNew} variant="outline">
-            📄 New Audit
+            ✨ New Audit
           </Button>
         </div>
       </div>
@@ -189,6 +232,27 @@ export function ReportDisplay({
                 <p className="text-sm text-muted-foreground">{projectMetadata.description}</p>
               </div>
             </div>
+          </div>
+        </Card>
+      )}
+
+      {testedEndpoints.length > 0 && (
+        <Card className="mb-6 p-6">
+          <h3 className="mb-4 text-xl font-semibold text-foreground">Endpoints Tested ({testedEndpoints.length})</h3>
+          <div className="space-y-2">
+            {testedEndpoints.map((endpoint, idx) => (
+              <div key={idx} className="flex items-center gap-3 rounded-lg border border-border p-3">
+                <Badge variant="outline" className="font-mono">
+                  {idx + 1}
+                </Badge>
+                <code className="flex-1 text-sm text-foreground">
+                  <span className="font-bold text-primary">{endpoint.method}</span> {endpoint.url}
+                </code>
+                <Badge className={endpoint.issuesCount > 0 ? "bg-destructive" : "bg-success"}>
+                  {endpoint.issuesCount} issues
+                </Badge>
+              </div>
+            ))}
           </div>
         </Card>
       )}
