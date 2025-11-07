@@ -203,11 +203,9 @@ export function ReportDisplay({
           <p className="text-pretty text-muted-foreground">Comprehensive analysis of your API security</p>
         </div>
         <div className="flex gap-2">
-          {onTestAnother && (
-            <Button onClick={onTestAnother} variant="default">
-              🔄 Test Another Endpoint
-            </Button>
-          )}
+          <Button onClick={onTestAnother} variant="default">
+            🔄 Test Another Endpoint
+          </Button>
           <Button onClick={onStartNew} variant="outline">
             ✨ New Audit
           </Button>
