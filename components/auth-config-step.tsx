@@ -25,11 +25,14 @@ export function AuthConfigStep({ onNext, onBack, initialData }: AuthConfigStepPr
   const [loginEndpoint, setLoginEndpoint] = useState(initialData?.loginEndpoint || "")
   const [loginMethod, setLoginMethod] = useState<"POST" | "GET">(initialData?.loginMethod || "POST")
   const [loginBody, setLoginBody] = useState(initialData?.loginBody || "")
+  const [loginHeaders, setLoginHeaders] = useState<Record<string, string>>({})
 
   const [rawRequest, setRawRequest] = useState("")
   const [isExecuting, setIsExecuting] = useState(false)
   const [authResponse, setAuthResponse] = useState<any>(null)
   const [authError, setAuthError] = useState<string | null>(null)
+
+  const [useRawRequest, setUseRawRequest] = useState(false)
 
   const [isVerifying, setIsVerifying] = useState(false)
   const [verificationEndpoint, setVerificationEndpoint] = useState("")
@@ -53,27 +56,76 @@ export function AuthConfigStep({ onNext, onBack, initialData }: AuthConfigStepPr
 
   const parseRawRequest = (raw: string) => {
     try {
-      const methodMatch = raw.match(/^(GET|POST|PUT|DELETE|PATCH)\s+/i)
+      const trimmed = raw.trim()
+
+      if (trimmed.toLowerCase().startsWith("curl")) {
+        return parseCurlCommand(trimmed)
+      }
+
+      const methodMatch = trimmed.match(/^(GET|POST|PUT|DELETE|PATCH)\s+/i)
       if (!methodMatch) {
-        throw new Error("Invalid request format. Expected: METHOD URL")
+        throw new Error("Invalid request format. Expected: curl command or METHOD URL")
       }
 
       const method = methodMatch[1].toUpperCase()
-      const urlPart = raw.substring(methodMatch[0].length).trim()
+      const urlPart = trimmed.substring(methodMatch[0].length).trim()
+      const url = urlPart.split(/\s+/)[0]
 
-      // For APIs like VBank that expect query params with empty body
-      const url = urlPart.trim()
-
-      setLoginEndpoint(url)
-      setLoginMethod(method as "POST" | "GET")
-      setLoginBody("") // Empty body for query parameter requests
-
-      return { url, method, body: "" }
-    } catch (error) {
-      throw new Error(
-        "Failed to parse request. Use format: POST https://api.example.com/auth?param1=value1&param2=value2",
-      )
+      return { url, method, body: "", headers: {} }
+    } catch (error: any) {
+      throw new Error(error.message || "Failed to parse request")
     }
+  }
+
+  const parseCurlCommand = (curlCmd: string) => {
+    let url = ""
+    let method = "POST" // Default to POST for auth requests
+    let body = ""
+    const headers: Record<string, string> = {}
+
+    // Extract method first
+    const methodMatch = curlCmd.match(/-X\s+['"]?(GET|POST|PUT|DELETE|PATCH)['"]?/i)
+    if (methodMatch) {
+      method = methodMatch[1].toUpperCase()
+    }
+
+    // Extract URL - handle various cURL formats
+    // Format 1: curl -X POST 'url'
+    // Format 2: curl 'url' -X POST
+    // Format 3: curl url
+    const urlPatterns = [
+      /curl[^'"]*['"]([^'"]+)['"]/, // curl ... 'url'
+      /curl\s+([^\s-]+)/, // curl url (no quotes, no flags)
+      /curl\s+-X\s+\w+\s+['"]?([^'"\s]+)['"]?/, // curl -X METHOD url
+    ]
+
+    for (const pattern of urlPatterns) {
+      const match = curlCmd.match(pattern)
+      if (match && match[1] && !match[1].includes("-")) {
+        url = match[1]
+        break
+      }
+    }
+
+    // Extract headers
+    const headerMatches = curlCmd.matchAll(/-H\s+['"]([^:]+):\s*([^'"]+)['"]/gi)
+    for (const match of headerMatches) {
+      headers[match[1].trim()] = match[2].trim()
+    }
+
+    // Extract body/data
+    const dataMatch = curlCmd.match(/--data(?:-raw)?\s+['"](.+?)['"]/s) || curlCmd.match(/-d\s+['"](.+?)['"]/s)
+    if (dataMatch) {
+      body = dataMatch[1]
+    }
+
+    if (!url) {
+      throw new Error("Could not extract URL from cURL command")
+    }
+
+    console.log("[v0] Parsed cURL:", { url, method, body, headers })
+
+    return { url, method, body, headers }
   }
 
   const executeAuthRequest = async () => {
@@ -82,21 +134,41 @@ export function AuthConfigStep({ onNext, onBack, initialData }: AuthConfigStepPr
     setAuthResponse(null)
 
     try {
-      if (rawRequest.trim()) {
-        parseRawRequest(rawRequest)
-      }
-
-      if (!loginEndpoint) {
-        throw new Error("Login endpoint is required")
-      }
-
+      let endpoint = loginEndpoint
+      let method = loginMethod
       let requestBody = undefined
-      if (loginBody && loginBody.trim()) {
+      let requestHeaders = { ...loginHeaders }
+
+      if (rawRequest.trim()) {
+        const parsed = parseRawRequest(rawRequest)
+        endpoint = parsed.url
+        method = parsed.method as "POST" | "GET"
+        requestHeaders = { ...requestHeaders, ...parsed.headers }
+
+        setLoginEndpoint(parsed.url)
+        setLoginMethod(method)
+        setLoginHeaders(parsed.headers)
+
+        if (parsed.body && parsed.body.trim()) {
+          setLoginBody(parsed.body)
+          try {
+            requestBody = JSON.parse(parsed.body)
+          } catch (e) {
+            requestBody = parsed.body
+          }
+        }
+
+        console.log("[v0] Executing auth request:", { endpoint, method, body: requestBody, headers: requestHeaders })
+      } else if (loginBody && loginBody.trim()) {
         try {
           requestBody = JSON.parse(loginBody)
         } catch (e) {
           throw new Error("Invalid JSON in request body")
         }
+      }
+
+      if (!endpoint) {
+        throw new Error("Login endpoint is required")
       }
 
       const proxyResponse = await fetch("/api/execute-auth", {
@@ -105,15 +177,15 @@ export function AuthConfigStep({ onNext, onBack, initialData }: AuthConfigStepPr
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          url: loginEndpoint,
-          method: loginMethod,
-          requestBody, // Will be undefined if body is empty
+          url: endpoint,
+          method: method,
+          requestBody,
+          headers: Object.keys(requestHeaders).length > 0 ? requestHeaders : undefined,
         }),
       })
 
       const proxyData = await proxyResponse.json()
 
-      // Only throw error if there's a network error (status 0) or proxy error
       if (proxyData.status === 0 && proxyData.error) {
         throw new Error(proxyData.error)
       }
@@ -122,7 +194,6 @@ export function AuthConfigStep({ onNext, onBack, initialData }: AuthConfigStepPr
       setAuthResponse(data)
 
       if (proxyData.ok) {
-        // Success response (2xx)
         const extractedToken =
           data.token || data.access_token || data.accessToken || data.bearer_token || data.auth_token
         if (extractedToken) {
@@ -138,7 +209,6 @@ export function AuthConfigStep({ onNext, onBack, initialData }: AuthConfigStepPr
           description: `Status: ${proxyData.status} ${proxyData.statusText}`,
         })
       } else {
-        // Non-2xx response (4xx, 5xx) - still valid, just not successful
         toast({
           title: "API Response Received",
           description: `Status: ${proxyData.status} ${proxyData.statusText}. Check the response below for details.`,
@@ -168,7 +238,6 @@ export function AuthConfigStep({ onNext, onBack, initialData }: AuthConfigStepPr
 
       const headers: Record<string, string> = {}
 
-      // Add authentication based on method
       if (authMethod === "bearer" && token) {
         headers["Authorization"] = `Bearer ${token}`
       } else if (authMethod === "api-key" && apiKey) {
@@ -300,59 +369,66 @@ export function AuthConfigStep({ onNext, onBack, initialData }: AuthConfigStepPr
               </h4>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="raw-request">Raw Request (Optional)</Label>
+                  <Label htmlFor="raw-request">Raw Request / cURL (Optional)</Label>
                   <Textarea
                     id="raw-request"
-                    placeholder="POST https://vbank.open.bankingapi.ru/auth/bank-token?client_id=team200&client_secret=XXX"
+                    placeholder={`curl -X 'POST' \\\n  'https://vbank.open.bankingapi.ru/auth/bank-token?client_id=team200&client_secret=1zL6sQrJImrxblTHfnOZ1Gty1v1NrGsH' \\\n  -H 'accept: application/json' \\\n  -d ''`}
                     value={rawRequest}
-                    onChange={(e) => setRawRequest(e.target.value)}
-                    rows={2}
+                    onChange={(e) => {
+                      setRawRequest(e.target.value)
+                      setUseRawRequest(e.target.value.trim().length > 0)
+                    }}
+                    rows={4}
                     className="font-mono text-sm"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Paste the full request string or configure manually below
+                    Paste cURL command or raw request (e.g., POST https://api.example.com/auth)
                   </p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="login-endpoint">{t("loginEndpoint")} *</Label>
-                  <Input
-                    id="login-endpoint"
-                    type="url"
-                    placeholder={t("loginEndpointPlaceholder")}
-                    value={loginEndpoint}
-                    onChange={(e) => setLoginEndpoint(e.target.value)}
-                    required={needsLogin}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="login-method">{t("loginMethod")}</Label>
-                  <Select value={loginMethod} onValueChange={(value: any) => setLoginMethod(value)}>
-                    <SelectTrigger id="login-method">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="POST">POST</SelectItem>
-                      <SelectItem value="GET">GET</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="login-body">{t("requestBody")}</Label>
-                  <Textarea
-                    id="login-body"
-                    placeholder='{"username": "user", "password": "pass"}'
-                    value={loginBody}
-                    onChange={(e) => setLoginBody(e.target.value)}
-                    rows={3}
-                    className="font-mono text-sm"
-                  />
-                </div>
+                {!useRawRequest && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="login-endpoint">{t("loginEndpoint")} *</Label>
+                      <Input
+                        id="login-endpoint"
+                        type="url"
+                        placeholder={t("loginEndpointPlaceholder")}
+                        value={loginEndpoint}
+                        onChange={(e) => setLoginEndpoint(e.target.value)}
+                        required={needsLogin && !useRawRequest}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="login-method">{t("loginMethod")}</Label>
+                      <Select value={loginMethod} onValueChange={(value: any) => setLoginMethod(value)}>
+                        <SelectTrigger id="login-method">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="POST">POST</SelectItem>
+                          <SelectItem value="GET">GET</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="login-body">{t("requestBody")}</Label>
+                      <Textarea
+                        id="login-body"
+                        placeholder='{"username": "user", "password": "pass"}'
+                        value={loginBody}
+                        onChange={(e) => setLoginBody(e.target.value)}
+                        rows={3}
+                        className="font-mono text-sm"
+                      />
+                    </div>
+                  </>
+                )}
 
                 <Button
                   type="button"
                   onClick={executeAuthRequest}
-                  disabled={isExecuting || !loginEndpoint}
+                  disabled={isExecuting || (!loginEndpoint && !rawRequest.trim())}
                   className="w-full"
                   variant="secondary"
                 >

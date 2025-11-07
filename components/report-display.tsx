@@ -5,23 +5,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import {
-  Download,
-  FileText,
-  AlertTriangle,
-  AlertCircle,
-  Info,
-  CheckCircle2,
-  Shield,
-  TrendingUp,
-  Calendar,
-  Hash,
-  Briefcase,
-  FileCode,
-  Lightbulb,
-  Target,
-  Code,
-} from "lucide-react"
 import type { SecurityReport, SeverityLevel, ProjectMetadata, TestMode } from "@/lib/types"
 import { toast } from "@/hooks/use-toast"
 import { useLanguage } from "@/lib/language-context"
@@ -57,19 +40,6 @@ export function ReportDisplay({
         return "bg-warning/60 text-warning-foreground"
       case "info":
         return "bg-muted text-muted-foreground"
-    }
-  }
-
-  const getSeverityIcon = (severity: SeverityLevel) => {
-    switch (severity) {
-      case "critical":
-      case "high":
-        return <AlertTriangle className="h-4 w-4" />
-      case "medium":
-        return <AlertCircle className="h-4 w-4" />
-      case "low":
-      case "info":
-        return <Info className="h-4 w-4" />
     }
   }
 
@@ -120,12 +90,25 @@ export function ReportDisplay({
       textReport += `Description: ${projectMetadata.description}\n\n`
     }
 
+    if (report.tested_endpoint) {
+      textReport += `Tested Endpoint: ${report.tested_endpoint}\n`
+    }
+
     textReport += `Scan ID: ${report.scan_id}\n`
     textReport += `Date: ${new Date(report.timestamp).toLocaleString()}\n`
     textReport += `API Name: ${report.api_name}\n`
     textReport += `Overall Risk Score: ${report.overall_risk_score.toUpperCase()}\n`
     textReport += `Endpoints Scanned: ${report.endpoints_scanned}\n`
     textReport += `Vulnerabilities Found: ${report.vulnerabilities_found}\n\n`
+
+    if (agenticResult?.iterations && agenticResult.iterations.length > 0) {
+      textReport += `ENDPOINTS TESTED\n`
+      textReport += `${"-".repeat(50)}\n`
+      agenticResult.iterations.forEach((iteration: any, idx: number) => {
+        textReport += `${idx + 1}. ${iteration.request.method} ${iteration.request.url}\n`
+      })
+      textReport += `\n`
+    }
 
     textReport += `SUMMARY\n`
     textReport += `${"-".repeat(50)}\n`
@@ -179,13 +162,11 @@ export function ReportDisplay({
         <div className="flex gap-2">
           {testMode === "manual" && onTestAnother && (
             <Button onClick={onTestAnother} variant="default">
-              <FileText className="mr-2 h-4 w-4" />
-              Test Another Endpoint
+              📄 Test Another Endpoint
             </Button>
           )}
           <Button onClick={onStartNew} variant="outline">
-            <FileText className="mr-2 h-4 w-4" />
-            New Audit
+            📄 New Audit
           </Button>
         </div>
       </div>
@@ -195,14 +176,14 @@ export function ReportDisplay({
           <h3 className="mb-4 text-xl font-semibold text-foreground">Project Information</h3>
           <div className="space-y-3">
             <div className="flex items-start gap-3">
-              <Briefcase className="mt-0.5 h-5 w-5 text-muted-foreground" />
+              <span className="mt-0.5 text-xl">💼</span>
               <div>
                 <p className="text-sm font-medium text-foreground">Project Name</p>
                 <p className="text-sm text-muted-foreground">{projectMetadata.name}</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <FileCode className="mt-0.5 h-5 w-5 text-muted-foreground" />
+              <span className="mt-0.5 text-xl">📝</span>
               <div>
                 <p className="text-sm font-medium text-foreground">Description</p>
                 <p className="text-sm text-muted-foreground">{projectMetadata.description}</p>
@@ -212,12 +193,53 @@ export function ReportDisplay({
         </Card>
       )}
 
+      <Card className="mb-6 p-6">
+        <h3 className="mb-4 text-xl font-semibold text-foreground">Tested Endpoint</h3>
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+            <span className="text-xl">🎯</span>
+          </div>
+          <div className="flex-1">
+            <p className="text-sm text-muted-foreground">Base Endpoint</p>
+            <code className="text-sm font-medium text-foreground">
+              {report.tested_endpoint ||
+                (agenticResult?.iterations?.[0]?.request
+                  ? `${agenticResult.iterations[0].request.method} ${agenticResult.iterations[0].request.url}`
+                  : report.vulnerabilities[0]?.affected_endpoints?.[0] || "N/A")}
+            </code>
+          </div>
+        </div>
+      </Card>
+
+      {agenticResult && agenticResult.iterations && agenticResult.iterations.length > 0 && (
+        <Card className="mb-6 p-6">
+          <h3 className="mb-4 text-xl font-semibold text-foreground">
+            Endpoints Tested ({agenticResult.iterations.length})
+          </h3>
+          <div className="space-y-2">
+            {agenticResult.iterations.map((iteration: any, idx: number) => (
+              <div key={idx} className="flex items-center gap-3 rounded-lg border border-border p-3">
+                <Badge variant="outline" className="font-mono">
+                  {idx + 1}
+                </Badge>
+                <code className="flex-1 text-sm text-foreground">
+                  <span className="font-bold text-primary">{iteration.request.method}</span> {iteration.request.url}
+                </code>
+                <Badge className={iteration.vulnerabilitiesFound.length > 0 ? "bg-destructive" : "bg-success"}>
+                  {iteration.vulnerabilitiesFound.length} issues
+                </Badge>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
       {/* Summary Cards */}
       <div className="mb-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="p-6">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-              <Shield className="h-6 w-6 text-primary" />
+              <span className="text-2xl">🛡️</span>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Overall Risk</p>
@@ -231,7 +253,7 @@ export function ReportDisplay({
         <Card className="p-6">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-accent/10">
-              <TrendingUp className="h-6 w-6 text-accent" />
+              <span className="text-2xl">📊</span>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Endpoints Scanned</p>
@@ -243,7 +265,7 @@ export function ReportDisplay({
         <Card className="p-6">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-destructive/10">
-              <AlertTriangle className="h-6 w-6 text-destructive" />
+              <span className="text-2xl">⚠️</span>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Vulnerabilities</p>
@@ -255,7 +277,7 @@ export function ReportDisplay({
         <Card className="p-6">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted">
-              <Calendar className="h-6 w-6 text-muted-foreground" />
+              <span className="text-2xl">📅</span>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Scan Date</p>
@@ -271,24 +293,22 @@ export function ReportDisplay({
           <h3 className="text-xl font-semibold text-foreground">Report Details</h3>
           <div className="flex gap-2">
             <Button onClick={handleDownloadJSON} variant="outline" size="sm">
-              <Download className="mr-2 h-4 w-4" />
-              JSON
+              ⬇️ JSON
             </Button>
             <Button onClick={handleDownloadPDF} variant="outline" size="sm">
-              <Download className="mr-2 h-4 w-4" />
-              TXT
+              ⬇️ TXT
             </Button>
           </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
           <div className="flex items-center gap-2">
-            <Hash className="h-4 w-4 text-muted-foreground" />
+            <span className="text-muted-foreground">#️⃣</span>
             <span className="text-sm text-muted-foreground">Scan ID:</span>
             <span className="font-mono text-sm text-foreground">{report.scan_id}</span>
           </div>
           <div className="flex items-center gap-2">
-            <FileText className="h-4 w-4 text-muted-foreground" />
+            <span className="text-muted-foreground">📄</span>
             <span className="text-sm text-muted-foreground">API Name:</span>
             <span className="text-sm font-medium text-foreground">{report.api_name}</span>
           </div>
@@ -422,7 +442,7 @@ export function ReportDisplay({
       {report.recommendedTests && report.recommendedTests.length > 0 && (
         <Card className="mb-6 p-6">
           <div className="mb-4 flex items-center gap-3">
-            <Lightbulb className="h-6 w-6 text-primary" />
+            <span className="text-2xl">💡</span>
             <div>
               <h3 className="text-xl font-semibold text-foreground">{t("recommendedFollowUpTests")}</h3>
               <p className="text-sm text-muted-foreground">{t("recommendedTestsDesc")}</p>
@@ -459,7 +479,7 @@ export function ReportDisplay({
       {report.potentialVulnerabilities && report.potentialVulnerabilities.length > 0 && (
         <Card className="mb-6 p-6">
           <div className="mb-4 flex items-center gap-3">
-            <Target className="h-6 w-6 text-warning" />
+            <span className="text-2xl">🎯</span>
             <div>
               <h3 className="text-xl font-semibold text-foreground">{t("potentialVulnerabilities")}</h3>
               <p className="text-sm text-muted-foreground">{t("potentialVulnDesc")}</p>
@@ -470,7 +490,7 @@ export function ReportDisplay({
               <Card key={index} className="border-warning/20 bg-warning/5 p-4">
                 <div className="mb-2 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Code className="h-4 w-4 text-warning" />
+                    <span className="text-lg">💻</span>
                     <span className="font-medium text-foreground">{vuln.type}</span>
                   </div>
                   <Badge
@@ -507,7 +527,7 @@ export function ReportDisplay({
         <h3 className="mb-4 text-xl font-semibold text-foreground">Vulnerabilities Found</h3>
         {report.vulnerabilities.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-8 text-center">
-            <CheckCircle2 className="h-12 w-12 text-success" />
+            <span className="text-5xl">✅</span>
             <p className="text-lg font-medium text-foreground">No vulnerabilities found</p>
             <p className="text-sm text-muted-foreground">Your API appears to be secure</p>
           </div>
@@ -518,7 +538,6 @@ export function ReportDisplay({
                 <AccordionTrigger className="hover:no-underline">
                   <div className="flex flex-1 items-center gap-3 text-left">
                     <Badge className={getSeverityColor(vuln.severity)}>
-                      {getSeverityIcon(vuln.severity)}
                       <span className="ml-1">{vuln.severity.toUpperCase()}</span>
                     </Badge>
                     <span className="font-medium text-foreground">{vuln.title}</span>

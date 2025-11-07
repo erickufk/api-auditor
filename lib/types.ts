@@ -33,6 +33,7 @@ export interface SecurityReport {
   scan_id: string
   timestamp: string
   api_name: string
+  tested_endpoint?: string
   overall_risk_score: SeverityLevel
   endpoints_scanned: number
   vulnerabilities_found: number

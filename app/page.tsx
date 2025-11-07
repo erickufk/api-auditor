@@ -33,7 +33,7 @@ import { sessionStorage } from "@/lib/session-storage"
 import { toast } from "@/hooks/use-toast"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { runAgenticWorkflow as executeAgenticWorkflow } from "@/lib/agentic-workflow"
+import { runAgenticWorkflow as executeAgenticWorkflow, getTestedEndpoint } from "@/lib/agentic-workflow"
 import { parseOpenAPISpec, buildEndpointUrl } from "@/lib/openapi-parser"
 
 type WizardStep = "landing" | "welcome" | "project-mode" | "auth" | "config" | "running" | "results"
@@ -277,6 +277,7 @@ export default function Home() {
         scan_id: `agentic-${Date.now()}`,
         timestamp: new Date().toISOString(),
         api_name: projectMetadata?.name || "API Security Test",
+        tested_endpoint: getTestedEndpoint(result.iterations),
         overall_risk_score: calculateOverallRisk(result.totalVulnerabilities),
         endpoints_scanned: 1,
         vulnerabilities_found: result.totalVulnerabilities.length,
@@ -451,6 +452,10 @@ export default function Home() {
         scan_id: `agentic-file-${Date.now()}`,
         timestamp: new Date().toISOString(),
         api_name: parsedSpec.title,
+        tested_endpoint:
+          consolidatedResult.iterations.length > 0
+            ? getTestedEndpoint(consolidatedResult.iterations)
+            : "Multiple endpoints",
         overall_risk_score: calculateOverallRisk(allVulnerabilities),
         endpoints_scanned: parsedSpec.endpoints.length,
         vulnerabilities_found: allVulnerabilities.length,

@@ -208,3 +208,9 @@ Found ${vulnerabilities.length} total vulnerabilities:
 
 The AI agent autonomously explored the API endpoint, generated and executed ${iterations.length} test variations, and provided detailed security analysis for each iteration.`
 }
+
+export function getTestedEndpoint(iterations: AgenticIteration[]): string {
+  if (iterations.length === 0) return "N/A"
+  const firstIteration = iterations[0]
+  return `${firstIteration.request.method} ${firstIteration.request.url}`
+}

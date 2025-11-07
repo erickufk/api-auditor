@@ -9,7 +9,6 @@ function extractJsonFromMarkdown(text: string): string {
 }
 
 function cleanJsonString(jsonStr: string): string {
-  // Remove any leading/trailing whitespace
   let cleaned = jsonStr.trim()
 
   // Remove trailing commas before closing braces/brackets
@@ -19,7 +18,39 @@ function cleanJsonString(jsonStr: string): string {
   cleaned = cleaned.replace(/\/\/.*$/gm, "")
   cleaned = cleaned.replace(/\/\*[\s\S]*?\*\//g, "")
 
+  // Remove trailing text after the last closing brace
+  const lastBraceIndex = cleaned.lastIndexOf("}")
+  if (lastBraceIndex !== -1 && lastBraceIndex < cleaned.length - 1) {
+    cleaned = cleaned.substring(0, lastBraceIndex + 1)
+  }
+
   return cleaned
+}
+
+function attemptJsonFix(jsonStr: string): string {
+  let fixed = jsonStr
+
+  // Fix unescaped quotes in string values (basic attempt)
+  // This is a simplistic approach - may need refinement
+  fixed = fixed.replace(/: "([^"]*)"([^,}\]]*)/g, (match, content, after) => {
+    if (
+      after.trim() &&
+      !after.trim().startsWith(",") &&
+      !after.trim().startsWith("}") &&
+      !after.trim().startsWith("]")
+    ) {
+      return `: "${content}${after}"`
+    }
+    return match
+  })
+
+  // Remove any text before the first opening brace
+  const firstBraceIndex = fixed.indexOf("{")
+  if (firstBraceIndex > 0) {
+    fixed = fixed.substring(firstBraceIndex)
+  }
+
+  return fixed
 }
 
 export async function POST(request: NextRequest) {
@@ -168,24 +199,31 @@ IMPORTANT: Return ONLY the JSON object, no markdown code blocks, no additional t
       analysis = JSON.parse(cleanedText)
     } catch (parseError) {
       console.log("[v0] Initial JSON parse failed, attempting to clean and retry")
-      console.log("[v0] Raw response text:", cleanedText.substring(0, 500))
 
       try {
         // Second try: clean common JSON issues
         const cleanedJson = cleanJsonString(cleanedText)
         analysis = JSON.parse(cleanedJson)
       } catch (secondError) {
-        console.error("[v0] JSON parsing failed after cleaning:", secondError)
-        console.error("[v0] Problematic JSON:", cleanedText.substring(0, 1000))
+        console.log("[v0] Basic cleaning failed, attempting advanced fixes")
 
-        return NextResponse.json({
-          analysis: "Failed to parse AI response. The response may have been malformed.",
-          vulnerabilitiesFound: [],
-          followUpTests: [],
-          shouldContinue: false,
-          reasoning: "Stopped due to JSON parsing error in AI response",
-          error: secondError instanceof Error ? secondError.message : String(secondError),
-        })
+        try {
+          // Third try: attempt more aggressive fixes
+          const fixedJson = attemptJsonFix(cleanJsonString(cleanedText))
+          analysis = JSON.parse(fixedJson)
+        } catch (thirdError) {
+          console.error("[v0] JSON parsing failed after all attempts:", thirdError)
+          console.error("[v0] Problematic JSON:", cleanedText.substring(0, 1500))
+
+          return NextResponse.json({
+            analysis: "AI returned malformed JSON response. This may be due to response length or complexity.",
+            vulnerabilitiesFound: [],
+            followUpTests: [],
+            shouldContinue: true,
+            reasoning: "Continuing despite parsing error to complete the audit",
+            error: thirdError instanceof Error ? thirdError.message : String(thirdError),
+          })
+        }
       }
     }
 

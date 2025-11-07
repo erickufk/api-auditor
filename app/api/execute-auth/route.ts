@@ -10,6 +10,8 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`[v0] Proxying ${method} request to: ${url}`)
+    console.log(`[v0] Request body:`, requestBody)
+    console.log(`[v0] Request headers:`, headers)
 
     // Prepare fetch options
     const fetchOptions: RequestInit = {
@@ -20,9 +22,10 @@ export async function POST(request: NextRequest) {
       },
     }
 
-    // Add body for POST/PUT/PATCH requests
-    if (method !== "GET" && method !== "HEAD" && requestBody) {
-      fetchOptions.body = typeof requestBody === "string" ? requestBody : JSON.stringify(requestBody)
+    if (method !== "GET" && method !== "HEAD") {
+      if (requestBody !== undefined) {
+        fetchOptions.body = typeof requestBody === "string" ? requestBody : JSON.stringify(requestBody)
+      }
     }
 
     // Make the actual request to the external API

@@ -94,6 +94,7 @@ Return a JSON object matching this EXACT structure:
   "scan_id": "manual-test-[random-id]",
   "timestamp": "[current ISO timestamp]",
   "api_name": "[extract from URL or 'Manual Test']",
+  "tested_endpoint": "${testRequest.method} ${testRequest.url}",
   "overall_risk_score": "critical|high|medium|low|info",
   "endpoints_scanned": 1,
   "vulnerabilities_found": [number],
