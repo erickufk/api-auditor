@@ -256,6 +256,8 @@ export function AuthConfigStep({ onNext, onBack, initialData }: AuthConfigStepPr
         url = `${url}${separator}${apiKeyName}=${encodeURIComponent(apiKey)}`
       }
 
+      console.log("[v0] Verifying token with:", { url, headers })
+
       const proxyResponse = await fetch("/api/execute-auth", {
         method: "POST",
         headers: {
@@ -271,22 +273,41 @@ export function AuthConfigStep({ onNext, onBack, initialData }: AuthConfigStepPr
       const proxyData = await proxyResponse.json()
       const data = proxyData.body || {}
       const success = proxyData.ok
+      const status = proxyData.status
+
+      let message = ""
+      if (success) {
+        message = "Token verified successfully! API is ready for use."
+      } else if (status === 401) {
+        message = `Authentication failed (401 Unauthorized). The token may be invalid, expired, or not authorized for this endpoint. Please check:\n• Token is correct\n• Verification endpoint is correct\n• Token has proper scope/permissions for this endpoint`
+      } else if (status === 404) {
+        // 404 with proper auth means token is valid, resource just doesn't exist
+        message = `Authentication appears valid, but resource not found (404). This may indicate:\n• Token is working correctly (no 401 error)\n• The endpoint or resource doesn't exist yet\n• You may need to create the resource first\n\nYou can proceed with testing - authentication is likely configured correctly.`
+      } else if (status === 403) {
+        message = `Access forbidden (403). Authentication succeeded but token lacks permission for this endpoint. Check token scope/permissions.`
+      } else {
+        message = `Verification returned status ${status}: ${proxyData.statusText}. Check the response data below for details.`
+      }
+
+      const isAuthWorking = success || status === 404
 
       setVerificationResult({
-        success,
-        status: proxyData.status,
-        message: success
-          ? "Token verified successfully! API is ready for use."
-          : `Verification failed: ${proxyData.statusText}`,
+        success: isAuthWorking,
+        status,
+        message,
         data,
       })
 
       toast({
-        title: success ? "Verification successful" : "Verification failed",
-        description: success
-          ? "Your authentication token is valid and working"
-          : `Status ${proxyData.status}: ${proxyData.statusText}`,
-        variant: success ? "default" : "destructive",
+        title: isAuthWorking ? "Authentication verified" : "Verification failed",
+        description: isAuthWorking
+          ? status === 404
+            ? "Token is valid (resource not found, but auth works)"
+            : "Your authentication token is valid and working"
+          : status === 401
+            ? "Token authentication failed - check token and endpoint permissions"
+            : `Status ${status}: ${proxyData.statusText}`,
+        variant: isAuthWorking ? "default" : "destructive",
       })
     } catch (error: any) {
       setVerificationResult({
@@ -650,7 +671,7 @@ export function AuthConfigStep({ onNext, onBack, initialData }: AuthConfigStepPr
                     <div className="flex items-start gap-2 mb-2">
                       <span className="text-lg shrink-0">{verificationResult.success ? "✓" : "✗"}</span>
                       <div className="flex-1">
-                        <p className="text-sm font-medium">{verificationResult.message}</p>
+                        <p className="text-sm font-medium whitespace-pre-line">{verificationResult.message}</p>
                         <p className="text-xs text-muted-foreground mt-1">Status: {verificationResult.status}</p>
                       </div>
                     </div>
