@@ -12,25 +12,25 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
   const { t } = useLanguage()
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="relative z-10 space-y-32 py-24 px-6 max-w-[1320px] mx-auto">
+    <div className="bg-background">
+      <div className="relative z-10 space-y-24 py-12 px-6 max-w-[1320px] mx-auto">
         {/* Hero Section */}
-        <div>
-          <section className="text-center space-y-8 max-w-4xl mx-auto">
+        <div className="pt-8">
+          <section className="text-center space-y-6 max-w-4xl mx-auto">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card text-primary text-sm font-medium">
               <span className="text-xl">✨</span>
               {t("landingBadge")}
             </div>
 
-            <h1 className="text-6xl md:text-7xl font-semibold tracking-tight text-balance leading-tight">
+            <h1 className="text-5xl md:text-6xl font-semibold tracking-tight text-balance leading-tight">
               {t("landingHeroTitle")}
             </h1>
 
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto text-balance leading-relaxed">
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-balance leading-relaxed">
               {t("landingHeroSubtitle")}
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
               <Button
                 size="lg"
                 onClick={onGetStarted}
