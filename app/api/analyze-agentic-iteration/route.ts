@@ -27,8 +27,27 @@ function cleanJsonString(jsonStr: string): string {
   return cleaned
 }
 
+function escapeControlCharacters(jsonStr: string): string {
+  // This regex finds string values in JSON and escapes control characters within them
+  return jsonStr.replace(/"([^"\\]|\\.)*"/g, (match) => {
+    // Don't process if it's a key (followed by :) - only process values
+    return match.replace(/[\x00-\x1F\x7F]/g, (char) => {
+      const controlCharMap: { [key: string]: string } = {
+        "\n": "\\n",
+        "\r": "\\r",
+        "\t": "\\t",
+        "\b": "\\b",
+        "\f": "\\f",
+      }
+      return controlCharMap[char] || `\\u${char.charCodeAt(0).toString(16).padStart(4, "0")}`
+    })
+  })
+}
+
 function attemptJsonFix(jsonStr: string): string {
   let fixed = jsonStr
+
+  fixed = escapeControlCharacters(fixed)
 
   // Fix unescaped quotes in string values (basic attempt)
   // This is a simplistic approach - may need refinement
@@ -208,7 +227,6 @@ IMPORTANT: Return ONLY the JSON object, no markdown code blocks, no additional t
         console.log("[v0] Basic cleaning failed, attempting advanced fixes")
 
         try {
-          // Third try: attempt more aggressive fixes
           const fixedJson = attemptJsonFix(cleanJsonString(cleanedText))
           analysis = JSON.parse(fixedJson)
         } catch (thirdError) {

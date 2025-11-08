@@ -345,10 +345,28 @@ export default function Home() {
     agenticConfig: AgenticConfig,
   ) => {
     console.log("[v0] Starting agentic workflow for file with", parsedSpec.endpoints.length, "endpoints")
+    console.log("[v0] Parsed spec details:", {
+      title: parsedSpec.title,
+      version: parsedSpec.version,
+      baseUrl: parsedSpec.baseUrl,
+      endpointCount: parsedSpec.endpoints.length,
+      endpoints: parsedSpec.endpoints.map((e) => ({ method: e.method, path: e.path })),
+    })
 
     try {
       const allResults: AgenticTestResult[] = []
       const allVulnerabilities: Vulnerability[] = []
+
+      if (parsedSpec.endpoints.length === 0) {
+        console.error("[v0] No endpoints found in OpenAPI spec")
+        toast({
+          title: "Error",
+          description: "No endpoints found in the OpenAPI specification",
+          variant: "destructive",
+        })
+        setCurrentStep("config")
+        return
+      }
 
       for (let i = 0; i < parsedSpec.endpoints.length; i++) {
         const endpoint = parsedSpec.endpoints[i]
@@ -361,6 +379,8 @@ export default function Home() {
 
         // Build the request for this endpoint
         const url = buildEndpointUrl(parsedSpec.baseUrl || "", endpoint.path)
+        console.log(`[v0] Built URL for endpoint:`, url)
+
         const initialRequest: ManualTestRequest = {
           url,
           method: endpoint.method as any,
@@ -369,6 +389,7 @@ export default function Home() {
 
         // Add auth headers if configured
         if (authConfig && authConfig.method !== "none") {
+          console.log("[v0] Adding auth headers, method:", authConfig.method)
           if (authConfig.method === "bearer" && authConfig.token) {
             initialRequest.headers["Authorization"] = `Bearer ${authConfig.token}`
           } else if (authConfig.method === "api-key" && authConfig.apiKey) {
@@ -380,6 +401,8 @@ export default function Home() {
             initialRequest.headers["Authorization"] = `Basic ${credentials}`
           }
         }
+
+        console.log(`[v0] Initial request for endpoint ${i + 1}:`, initialRequest)
 
         // Update progress
         setSession((prev) => {
@@ -398,41 +421,61 @@ export default function Home() {
         })
 
         // Run agentic workflow for this endpoint
-        const result = await executeAgenticWorkflow(initialRequest, agenticConfig, (iteration, total, status) => {
-          if (abortControllerRef.current?.signal.aborted) {
-            throw new Error("Test aborted by user")
-          }
-
-          console.log(
-            `[v0] Endpoint ${i + 1}/${parsedSpec.endpoints.length}, Iteration ${iteration + 1}/${total}:`,
-            status,
-          )
-
-          setSession((prev) => {
-            if (!prev) return prev
-            const updatedStages = [...prev.stages]
-            updatedStages[0] = {
-              ...updatedStages[0],
-              status: "in-progress",
-              description: `Endpoint ${i + 1}/${parsedSpec.endpoints.length}: ${endpoint.method} ${endpoint.path} - ${status} (Iteration ${iteration + 1}/${total})`,
+        try {
+          const result = await executeAgenticWorkflow(initialRequest, agenticConfig, (iteration, total, status) => {
+            if (abortControllerRef.current?.signal.aborted) {
+              throw new Error("Test aborted by user")
             }
-            return {
-              ...prev,
-              currentStage: 0,
-              stages: updatedStages,
-            }
+
+            console.log(
+              `[v0] Endpoint ${i + 1}/${parsedSpec.endpoints.length}, Iteration ${iteration + 1}/${total}:`,
+              status,
+            )
+
+            setSession((prev) => {
+              if (!prev) return prev
+              const updatedStages = [...prev.stages]
+              updatedStages[0] = {
+                ...updatedStages[0],
+                status: "in-progress",
+                description: `Endpoint ${i + 1}/${parsedSpec.endpoints.length}: ${endpoint.method} ${endpoint.path} - ${status} (Iteration ${iteration + 1}/${total})`,
+              }
+              return {
+                ...prev,
+                currentStage: 0,
+                stages: updatedStages,
+              }
+            })
           })
-        })
 
-        console.log(`[v0] Completed testing endpoint ${i + 1}/${parsedSpec.endpoints.length}:`, result)
-        allResults.push(result)
-        allVulnerabilities.push(...result.totalVulnerabilities)
+          console.log(`[v0] Completed testing endpoint ${i + 1}/${parsedSpec.endpoints.length}:`, result)
+          console.log(`[v0] Endpoint ${i + 1} results:`, {
+            iterations: result.iterations.length,
+            vulnerabilities: result.totalVulnerabilities.length,
+            stoppedReason: result.stoppedReason,
+          })
+
+          allResults.push(result)
+          allVulnerabilities.push(...result.totalVulnerabilities)
+        } catch (endpointError) {
+          console.error(`[v0] Error testing endpoint ${i + 1}:`, endpointError)
+          toast({
+            title: "Warning",
+            description: `Failed to test endpoint ${endpoint.method} ${endpoint.path}. Continuing with other endpoints...`,
+            variant: "destructive",
+          })
+          // Continue with next endpoint instead of failing completely
+        }
 
         // Add delay between endpoints to prevent rate limiting
         if (i < parsedSpec.endpoints.length - 1) {
           await new Promise((resolve) => setTimeout(resolve, 2000))
         }
       }
+
+      console.log("[v0] All endpoints tested. Consolidating results...")
+      console.log("[v0] Total results:", allResults.length)
+      console.log("[v0] Total vulnerabilities:", allVulnerabilities.length)
 
       // Consolidate all results
       const consolidatedResult: AgenticTestResult = {
@@ -454,6 +497,8 @@ export default function Home() {
       }
 
       const allEndpoints = getAllTestedEndpoints(consolidatedResult.iterations)
+
+      console.log("[v0] Creating security report with consolidated results...")
 
       // Convert to security report format
       const report: SecurityReport = {
@@ -478,6 +523,8 @@ export default function Home() {
         recommendations: generateRecommendations(consolidatedResult),
       }
 
+      console.log("[v0] Setting session with report...")
+
       setSession((prev) => {
         if (!prev) return prev
         const updatedStages = prev.stages.map((s) => ({ ...s, status: "complete" as const }))
@@ -490,6 +537,7 @@ export default function Home() {
       })
 
       setTimeout(() => {
+        console.log("[v0] Moving to results step...")
         setCurrentStep("results")
         toast({
           title: "Success",
@@ -503,6 +551,11 @@ export default function Home() {
       }
 
       console.error("[v0] Agentic file workflow error:", error)
+      console.error("[v0] Error details:", {
+        message: error instanceof Error ? error.message : "Unknown error",
+        stack: error instanceof Error ? error.stack : undefined,
+      })
+
       toast({
         title: "Error",
         description: "Failed to complete agentic test",
