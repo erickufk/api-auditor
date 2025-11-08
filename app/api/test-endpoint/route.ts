@@ -4,6 +4,9 @@ export async function POST(request: NextRequest) {
   try {
     const { url, method, headers, body } = await request.json()
 
+    console.log(`[v0] Testing endpoint: ${method} ${url}`)
+    console.log(`[v0] Request headers:`, headers)
+
     // Make the actual HTTP request
     const response = await fetch(url, {
       method,
@@ -21,11 +24,10 @@ export async function POST(request: NextRequest) {
       responseHeaders[key] = value
     })
 
-    if (!response.ok) {
-      console.log(
-        `[v0] Test result: ${method} ${url} returned ${response.status} - This is a valid test result for security analysis`,
-      )
-    }
+    const statusCategory = response.status >= 200 && response.status < 300 ? "success" : "non-2xx"
+    console.log(
+      `[v0] Test completed: ${method} ${url} → ${response.status} ${response.statusText} (${statusCategory} - valid test result)`,
+    )
 
     return NextResponse.json({
       status: response.status,
@@ -34,10 +36,10 @@ export async function POST(request: NextRequest) {
       body: responseBody,
     })
   } catch (error) {
-    console.error("[v0] Error making test request:", error)
+    console.error("[v0] Network error during test request:", error)
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : "Failed to make request",
+        error: error instanceof Error ? error.message : "Network failure",
       },
       { status: 500 },
     )

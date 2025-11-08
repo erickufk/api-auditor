@@ -36,12 +36,17 @@ export function AuthConfigStep({ onNext, onBack, initialData }: AuthConfigStepPr
 
   const [isVerifying, setIsVerifying] = useState(false)
   const [verificationEndpoint, setVerificationEndpoint] = useState("")
+  const [verificationRawRequest, setVerificationRawRequest] = useState("")
+  const [useVerificationRawRequest, setUseVerificationRawRequest] = useState(false)
   const [verificationResult, setVerificationResult] = useState<{
     success: boolean
     status: number
     message: string
     data?: any
   } | null>(null)
+
+  const [tokenExtractionPath, setTokenExtractionPath] = useState(initialData?.tokenExtractionPath || "")
+  const [extractedToken, setExtractedToken] = useState<string>("")
 
   const [token, setToken] = useState(initialData?.token || "")
   const [apiKey, setApiKey] = useState(initialData?.apiKey || "")
@@ -53,6 +58,28 @@ export function AuthConfigStep({ onNext, onBack, initialData }: AuthConfigStepPr
   const [clientSecret, setClientSecret] = useState(initialData?.clientSecret || "")
   const [tokenEndpoint, setTokenEndpoint] = useState(initialData?.tokenEndpoint || "")
   const [accessToken, setAccessToken] = useState(initialData?.accessToken || "")
+
+  const extractValueFromPath = (obj: any, path: string): string | null => {
+    if (!path || !obj) return null
+
+    try {
+      const keys = path.split(".")
+      let value = obj
+
+      for (const key of keys) {
+        if (value && typeof value === "object" && key in value) {
+          value = value[key]
+        } else {
+          return null
+        }
+      }
+
+      return typeof value === "string" ? value : String(value)
+    } catch (error) {
+      console.error("[v0] Error extracting value from path:", error)
+      return null
+    }
+  }
 
   const parseRawRequest = (raw: string) => {
     try {
@@ -78,49 +105,63 @@ export function AuthConfigStep({ onNext, onBack, initialData }: AuthConfigStepPr
   }
 
   const parseCurlCommand = (curlCmd: string) => {
+    const cleanedCmd = curlCmd
+      .replace(/\\\s*\n\s*/g, " ") // Remove backslash line continuations
+      .replace(/\s+/g, " ") // Normalize whitespace
+      .trim()
+
+    console.log("[v0] Cleaned cURL command:", cleanedCmd)
+
     let url = ""
     let method = "POST" // Default to POST for auth requests
     let body = ""
     const headers: Record<string, string> = {}
 
-    // Extract method first
-    const methodMatch = curlCmd.match(/-X\s+['"]?(GET|POST|PUT|DELETE|PATCH)['"]?/i)
+    // First extract method if present
+    const methodMatch = cleanedCmd.match(/-X\s+['"]?(GET|POST|PUT|DELETE|PATCH)['"]?/i)
     if (methodMatch) {
       method = methodMatch[1].toUpperCase()
     }
 
-    // Extract URL - handle various cURL formats
-    // Format 1: curl -X POST 'url'
-    // Format 2: curl 'url' -X POST
-    // Format 3: curl url
-    const urlPatterns = [
-      /curl[^'"]*['"]([^'"]+)['"]/, // curl ... 'url'
-      /curl\s+([^\s-]+)/, // curl url (no quotes, no flags)
-      /curl\s+-X\s+\w+\s+['"]?([^'"\s]+)['"]?/, // curl -X METHOD url
-    ]
-
-    for (const pattern of urlPatterns) {
-      const match = curlCmd.match(pattern)
-      if (match && match[1] && !match[1].includes("-")) {
-        url = match[1]
-        break
+    // Try to find URL - look for http(s):// in single quotes after curl command
+    let urlMatch = cleanedCmd.match(/curl[^h]*(https?:\/\/[^\s'"]+)/)
+    if (urlMatch && urlMatch[1]) {
+      url = urlMatch[1].replace(/['"]/g, "") // Remove any quotes
+    } else {
+      // Try with quotes - match URL within quotes, skipping any -X METHOD before it
+      urlMatch = cleanedCmd.match(/curl(?:\s+-X\s+['"]?\w+['"]?)?\s+['"]([^'"]+)['"]/)
+      if (urlMatch && urlMatch[1]) {
+        // Make sure it's actually a URL
+        if (urlMatch[1].startsWith("http://") || urlMatch[1].startsWith("https://")) {
+          url = urlMatch[1]
+        }
       }
     }
 
-    // Extract headers
-    const headerMatches = curlCmd.matchAll(/-H\s+['"]([^:]+):\s*([^'"]+)['"]/gi)
+    // If still no URL, try one more pattern: look for any http(s):// URL
+    if (!url) {
+      urlMatch = cleanedCmd.match(/(https?:\/\/[^\s'"]+)/)
+      if (urlMatch && urlMatch[1]) {
+        url = urlMatch[1]
+      }
+    }
+
+    const headerMatches = cleanedCmd.matchAll(/-H\s+['"]([^:]+):\s*([^'"]+)['"]/gi)
     for (const match of headerMatches) {
       headers[match[1].trim()] = match[2].trim()
     }
 
-    // Extract body/data
-    const dataMatch = curlCmd.match(/--data(?:-raw)?\s+['"](.+?)['"]/s) || curlCmd.match(/-d\s+['"](.+?)['"]/s)
+    const dataMatch = cleanedCmd.match(/(?:--data(?:-raw)?|-d)\s+['"](.+?)['"]\s*(?:-|$)/s)
     if (dataMatch) {
       body = dataMatch[1]
+        .replace(/\s+/g, " ") // Normalize whitespace in JSON
+        .trim()
     }
 
-    if (!url) {
-      throw new Error("Could not extract URL from cURL command")
+    if (!url || !url.startsWith("http")) {
+      throw new Error(
+        "Could not extract valid URL from cURL command. Make sure the URL starts with http:// or https://",
+      )
     }
 
     console.log("[v0] Parsed cURL:", { url, method, body, headers })
@@ -232,31 +273,56 @@ export function AuthConfigStep({ onNext, onBack, initialData }: AuthConfigStepPr
     setVerificationResult(null)
 
     try {
-      if (!verificationEndpoint) {
-        throw new Error("Verification endpoint is required")
-      }
-
-      const headers: Record<string, string> = {}
-
-      if (authMethod === "bearer" && token) {
-        headers["Authorization"] = `Bearer ${token}`
-      } else if (authMethod === "api-key" && apiKey) {
-        if (apiKeyLocation === "header") {
-          headers[apiKeyName] = apiKey
-        }
-      } else if (authMethod === "basic" && username && password) {
-        headers["Authorization"] = `Basic ${btoa(`${username}:${password}`)}`
-      } else if (authMethod === "oauth2" && accessToken) {
-        headers["Authorization"] = `Bearer ${accessToken}`
-      }
-
       let url = verificationEndpoint
-      if (authMethod === "api-key" && apiKeyLocation === "query" && apiKey) {
-        const separator = url.includes("?") ? "&" : "?"
-        url = `${url}${separator}${apiKeyName}=${encodeURIComponent(apiKey)}`
+      let method = "GET"
+      let requestHeaders: Record<string, string> = {}
+      let requestBody: any = undefined
+
+      if (verificationRawRequest.trim()) {
+        const parsed = parseRawRequest(verificationRawRequest)
+        url = parsed.url
+        method = parsed.method
+        requestHeaders = { ...parsed.headers }
+
+        if (parsed.body && parsed.body.trim()) {
+          try {
+            requestBody = JSON.parse(parsed.body)
+          } catch (e) {
+            requestBody = parsed.body
+          }
+        }
+
+        setVerificationEndpoint(parsed.url)
+      } else {
+        if (!verificationEndpoint) {
+          setVerificationResult({
+            success: false,
+            status: 0,
+            message: "Please provide either a verification cURL command or an endpoint URL",
+          })
+          setIsVerifying(false)
+          return
+        }
+
+        if (authMethod === "bearer" && token) {
+          requestHeaders["Authorization"] = `Bearer ${token}`
+        } else if (authMethod === "api-key" && apiKey) {
+          if (apiKeyLocation === "header") {
+            requestHeaders[apiKeyName] = apiKey
+          }
+        } else if (authMethod === "basic" && username && password) {
+          requestHeaders["Authorization"] = `Basic ${btoa(`${username}:${password}`)}`
+        } else if (authMethod === "oauth2" && accessToken) {
+          requestHeaders["Authorization"] = `Bearer ${accessToken}`
+        }
+
+        if (authMethod === "api-key" && apiKeyLocation === "query" && apiKey) {
+          const separator = url.includes("?") ? "&" : "?"
+          url = `${url}${separator}${apiKeyName}=${encodeURIComponent(apiKey)}`
+        }
       }
 
-      console.log("[v0] Verifying token with:", { url, headers })
+      console.log("[v0] Verifying token with:", { url, method, headers: requestHeaders, body: requestBody })
 
       const proxyResponse = await fetch("/api/execute-auth", {
         method: "POST",
@@ -265,8 +331,9 @@ export function AuthConfigStep({ onNext, onBack, initialData }: AuthConfigStepPr
         },
         body: JSON.stringify({
           url,
-          method: "GET",
-          headers,
+          method,
+          requestBody,
+          headers: Object.keys(requestHeaders).length > 0 ? requestHeaders : undefined,
         }),
       })
 
@@ -275,21 +342,59 @@ export function AuthConfigStep({ onNext, onBack, initialData }: AuthConfigStepPr
       const success = proxyData.ok
       const status = proxyData.status
 
-      let message = ""
-      if (success) {
-        message = "Token verified successfully! API is ready for use."
-      } else if (status === 401) {
-        message = `Authentication failed (401 Unauthorized). The token may be invalid, expired, or not authorized for this endpoint. Please check:\n• Token is correct\n• Verification endpoint is correct\n• Token has proper scope/permissions for this endpoint`
-      } else if (status === 404) {
-        // 404 with proper auth means token is valid, resource just doesn't exist
-        message = `Authentication appears valid, but resource not found (404). This may indicate:\n• Token is working correctly (no 401 error)\n• The endpoint or resource doesn't exist yet\n• You may need to create the resource first\n\nYou can proceed with testing - authentication is likely configured correctly.`
-      } else if (status === 403) {
-        message = `Access forbidden (403). Authentication succeeded but token lacks permission for this endpoint. Check token scope/permissions.`
-      } else {
-        message = `Verification returned status ${status}: ${proxyData.statusText}. Check the response data below for details.`
+      if (tokenExtractionPath && data) {
+        const extracted = extractValueFromPath(data, tokenExtractionPath)
+        if (extracted) {
+          setExtractedToken(extracted)
+
+          // Auto-apply the extracted token based on auth method
+          if (authMethod === "bearer") {
+            setToken(extracted)
+          } else if (authMethod === "oauth2") {
+            setAccessToken(extracted)
+          }
+
+          toast({
+            title: "Token extracted!",
+            description: `Successfully extracted token from path: ${tokenExtractionPath}`,
+          })
+        } else {
+          toast({
+            title: "Extraction failed",
+            description: `Could not find value at path: ${tokenExtractionPath}`,
+            variant: "destructive",
+          })
+        }
       }
 
-      const isAuthWorking = success || status === 404
+      let message = ""
+      let isAuthWorking = false
+
+      if (success) {
+        message = "✅ Authentication verified successfully! Your credentials are valid and working."
+        isAuthWorking = true
+      } else if (status === 401) {
+        message =
+          "❌ Authentication failed (401 Unauthorized). The credentials are invalid or expired. Please check your token/credentials and try again."
+        isAuthWorking = false
+      } else if (status === 404) {
+        message =
+          "✅ Authentication successful! The endpoint returned 404 (not found), which means your credentials are valid. The resource simply doesn't exist at this URL, but authentication is working correctly."
+        isAuthWorking = true
+      } else if (status === 403) {
+        message =
+          "⚠️ Authentication successful but access forbidden (403). Your credentials are valid, but they lack permission for this specific resource. Try a different endpoint or check your access level."
+        isAuthWorking = true
+      } else {
+        message = `Status ${status}: ${proxyData.statusText}. ${
+          status >= 400 && status < 500
+            ? "This appears to be a client error. Check your request and credentials."
+            : status >= 500
+              ? "Server error - the API may be experiencing issues."
+              : "Check the response data below for details."
+        }`
+        isAuthWorking = status === 403
+      }
 
       setVerificationResult({
         success: isAuthWorking,
@@ -299,25 +404,28 @@ export function AuthConfigStep({ onNext, onBack, initialData }: AuthConfigStepPr
       })
 
       toast({
-        title: isAuthWorking ? "Authentication verified" : "Verification failed",
+        title: isAuthWorking ? "✓ Authentication Working" : "✗ Authentication Failed",
         description: isAuthWorking
           ? status === 404
-            ? "Token is valid (resource not found, but auth works)"
-            : "Your authentication token is valid and working"
+            ? "Credentials are valid (404 just means resource not found)"
+            : status === 403
+              ? "Credentials valid but lack permission for this endpoint"
+              : "Your authentication is properly configured"
           : status === 401
-            ? "Token authentication failed - check token and endpoint permissions"
-            : `Status ${status}: ${proxyData.statusText}`,
+            ? "Invalid or expired credentials"
+            : `Request failed with status ${status}`,
         variant: isAuthWorking ? "default" : "destructive",
       })
     } catch (error: any) {
+      console.error("[v0] Verification error:", error)
       setVerificationResult({
         success: false,
         status: 0,
-        message: error.message || "Failed to verify token",
+        message: error.message || "Network error occurred while verifying authentication",
       })
       toast({
-        title: "Verification error",
-        description: error.message || "Failed to verify token",
+        title: "Network error",
+        description: error.message || "Could not connect to the API",
         variant: "destructive",
       })
     } finally {
@@ -331,6 +439,7 @@ export function AuthConfigStep({ onNext, onBack, initialData }: AuthConfigStepPr
     const authConfig: AuthConfig = {
       method: authMethod,
       ...(needsLogin && { loginEndpoint, loginMethod, loginBody }),
+      ...(tokenExtractionPath && { tokenExtractionPath }),
       ...(authMethod === "bearer" && { token }),
       ...(authMethod === "api-key" && { apiKey, apiKeyLocation, apiKeyName }),
       ...(authMethod === "basic" && { username, password }),
@@ -344,8 +453,9 @@ export function AuthConfigStep({ onNext, onBack, initialData }: AuthConfigStepPr
 
   const canVerify =
     authMethod !== "none" &&
-    verificationEndpoint &&
-    ((authMethod === "bearer" && token) ||
+    (verificationRawRequest.trim() || verificationEndpoint) &&
+    (verificationRawRequest.trim() ||
+      (authMethod === "bearer" && token) ||
       (authMethod === "api-key" && apiKey) ||
       (authMethod === "basic" && username && password) ||
       (authMethod === "oauth2" && accessToken))
@@ -364,6 +474,24 @@ export function AuthConfigStep({ onNext, onBack, initialData }: AuthConfigStepPr
 
       <Card className="p-8">
         <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-4">
+            <div className="flex gap-2">
+              <span className="text-xl shrink-0">💡</span>
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-foreground">Security Testing Tip</p>
+                <p className="text-xs text-muted-foreground">
+                  Testing without authentication (selecting "No Authentication") is a valid security testing approach.
+                  The auditor will attempt to access endpoints and analyze 401/403 responses to identify authentication
+                  weaknesses, exposed endpoints, and information leakage.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  If you configure authentication, the auditor will test with valid credentials to find authorization
+                  issues, privilege escalation, and other vulnerabilities.
+                </p>
+              </div>
+            </div>
+          </div>
+
           <div className="rounded-lg border border-accent/50 bg-accent/5 p-4">
             <div className="mb-3 flex gap-2">
               <span className="text-xl shrink-0">ℹ️</span>
@@ -636,19 +764,66 @@ export function AuthConfigStep({ onNext, onBack, initialData }: AuthConfigStepPr
                 Test your authentication by making a request to verify the token is valid and working
               </p>
               <div className="space-y-4">
+                {(authMethod === "bearer" || authMethod === "oauth2") && needsLogin && (
+                  <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+                    <Label htmlFor="token-extraction-path" className="text-sm font-medium">
+                      Token Extraction Path (Optional)
+                    </Label>
+                    <Input
+                      id="token-extraction-path"
+                      placeholder="e.g., data.token, access_token, result.auth.token"
+                      value={tokenExtractionPath}
+                      onChange={(e) => setTokenExtractionPath(e.target.value)}
+                      className="mt-2"
+                    />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Specify the path to extract the token from verification response (dot notation). The extracted
+                      token will be automatically used for authentication during audits.
+                    </p>
+                    {extractedToken && (
+                      <div className="mt-2 p-2 rounded bg-green-500/10 border border-green-500/20">
+                        <p className="text-xs text-green-600 dark:text-green-400 font-medium">
+                          ✓ Token extracted successfully!
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1 font-mono truncate">{extractedToken}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="space-y-2">
-                  <Label htmlFor="verification-endpoint">Verification Endpoint</Label>
-                  <Input
-                    id="verification-endpoint"
-                    type="url"
-                    placeholder="https://api.example.com/user/profile"
-                    value={verificationEndpoint}
-                    onChange={(e) => setVerificationEndpoint(e.target.value)}
+                  <Label htmlFor="verification-raw-request">Verification cURL / Raw Request (Optional)</Label>
+                  <Textarea
+                    id="verification-raw-request"
+                    placeholder={`curl -X 'GET' \\\n  'https://api.example.com/user/profile' \\\n  -H 'Authorization: Bearer YOUR_TOKEN' \\\n  -H 'accept: application/json'`}
+                    value={verificationRawRequest}
+                    onChange={(e) => {
+                      setVerificationRawRequest(e.target.value)
+                      setUseVerificationRawRequest(e.target.value.trim().length > 0)
+                    }}
+                    rows={4}
+                    className="font-mono text-sm"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Enter an API endpoint to test authentication (e.g., a user profile or status endpoint)
+                    Paste complete cURL command with authentication headers, or configure manually below
                   </p>
                 </div>
+
+                {!useVerificationRawRequest && (
+                  <div className="space-y-2">
+                    <Label htmlFor="verification-endpoint">Verification Endpoint</Label>
+                    <Input
+                      id="verification-endpoint"
+                      type="url"
+                      placeholder="https://api.example.com/user/profile"
+                      value={verificationEndpoint}
+                      onChange={(e) => setVerificationEndpoint(e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Enter an API endpoint to test authentication (e.g., a user profile or status endpoint)
+                    </p>
+                  </div>
+                )}
 
                 <Button
                   type="button"

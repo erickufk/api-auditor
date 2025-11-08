@@ -131,16 +131,13 @@ export interface AuthConfig {
   loginEndpoint?: string
   loginMethod?: "POST" | "GET"
   loginBody?: string
-  // Bearer Token
+  tokenExtractionPath?: string // e.g., "data.token", "result.access_token", "access_token"
   token?: string
-  // API Key
   apiKey?: string
   apiKeyLocation?: "header" | "query"
   apiKeyName?: string
-  // Basic Auth
   username?: string
   password?: string
-  // OAuth 2.0
   clientId?: string
   clientSecret?: string
   tokenEndpoint?: string
