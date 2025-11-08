@@ -90,6 +90,10 @@ export const translations = {
     uploadSpec: "Upload OpenAPI Specification",
     dragDrop: "Drag and drop your OpenAPI file here, or click to browse",
     supportedFormats: "Supported formats: JSON, YAML",
+    baseEndpoint: "Base Endpoint URL",
+    optional: "Optional",
+    baseEndpointDesc:
+      "Override the base URL from the OpenAPI specification. Use this if the spec doesn't have a servers section or if you want to test against a different environment (e.g., https://api.example.com)",
     endpointUrl: "Endpoint URL",
     endpointUrlPlaceholder: "https://api.example.com/users",
     httpMethod: "HTTP Method",
@@ -371,6 +375,10 @@ export const translations = {
     uploadSpec: "Загрузить спецификацию OpenAPI",
     dragDrop: "Перетащите файл OpenAPI сюда или нажмите для выбора",
     supportedFormats: "Поддерживаемые форматы: JSON, YAML",
+    baseEndpoint: "Базовый URL конечной точки",
+    optional: "Необязательно",
+    baseEndpointDesc:
+      "Переопределите базовый URL из спецификации OpenAPI. Используйте это, если в спецификации нет раздела servers или если вы хотите протестировать другую среду (например, https://api.example.com)",
     endpointUrl: "URL конечной точки",
     endpointUrlPlaceholder: "https://api.example.com/users",
     httpMethod: "HTTP метод",

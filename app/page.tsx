@@ -86,6 +86,7 @@ export default function Home() {
     inputType: "file" | "manual"
     fileContent?: string
     fileName?: string
+    baseEndpoint?: string
     endpoint?: string
     method?: string
     headers?: Record<string, string>
@@ -105,6 +106,23 @@ export default function Home() {
       try {
         const parsedSpec = parseOpenAPISpec(data.fileContent)
         console.log("[v0] Parsed OpenAPI spec:", parsedSpec)
+
+        if (data.baseEndpoint && data.baseEndpoint.trim()) {
+          console.log("[v0] Overriding baseUrl with user-provided baseEndpoint:", data.baseEndpoint)
+          parsedSpec.baseUrl = data.baseEndpoint.trim()
+        }
+
+        if (!parsedSpec.baseUrl || parsedSpec.baseUrl.trim() === "") {
+          console.error("[v0] No base URL found in OpenAPI spec and no base endpoint provided")
+          toast({
+            title: "Error",
+            description:
+              'OpenAPI specification is missing a base URL and no base endpoint was provided. Please provide a base endpoint URL or ensure the spec includes a "servers" section.',
+            variant: "destructive",
+          })
+          setCurrentStep("config")
+          return
+        }
 
         const newSession: AuditSession = {
           workflowType: "agentic",
@@ -353,6 +371,18 @@ export default function Home() {
       endpoints: parsedSpec.endpoints.map((e) => ({ method: e.method, path: e.path })),
     })
 
+    if (!parsedSpec.baseUrl || parsedSpec.baseUrl.trim() === "") {
+      console.error("[v0] No base URL found in OpenAPI spec")
+      toast({
+        title: "Error",
+        description:
+          'OpenAPI specification is missing a base URL. Please ensure the spec includes a "servers" section with a valid URL.',
+        variant: "destructive",
+      })
+      setCurrentStep("config")
+      return
+    }
+
     try {
       const allResults: AgenticTestResult[] = []
       const allVulnerabilities: Vulnerability[] = []
@@ -377,9 +407,20 @@ export default function Home() {
 
         console.log(`[v0] Testing endpoint ${i + 1}/${parsedSpec.endpoints.length}:`, endpoint)
 
-        // Build the request for this endpoint
-        const url = buildEndpointUrl(parsedSpec.baseUrl || "", endpoint.path)
-        console.log(`[v0] Built URL for endpoint:`, url)
+        let url: string
+        try {
+          url = buildEndpointUrl(parsedSpec.baseUrl, endpoint.path)
+          console.log(`[v0] Built full URL for endpoint:`, url)
+        } catch (urlError) {
+          console.error(`[v0] Failed to build URL for endpoint:`, urlError)
+          toast({
+            title: "Error",
+            description: urlError instanceof Error ? urlError.message : "Failed to build endpoint URL",
+            variant: "destructive",
+          })
+          setCurrentStep("config")
+          return
+        }
 
         const initialRequest: ManualTestRequest = {
           url,

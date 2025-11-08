@@ -18,6 +18,7 @@ interface AgenticConfigStepProps {
     inputType: "file" | "manual"
     fileContent?: string
     fileName?: string
+    baseEndpoint?: string
     endpoint?: string
     method?: string
     headers?: Record<string, string>
@@ -31,6 +32,7 @@ interface AgenticConfigStepProps {
 export function AgenticConfigStep({ onNext, onBack }: AgenticConfigStepProps) {
   const [inputType, setInputType] = useState<"file" | "manual">("file")
   const [file, setFile] = useState<File | null>(null)
+  const [baseEndpoint, setBaseEndpoint] = useState("")
   const [endpoint, setEndpoint] = useState("")
   const [method, setMethod] = useState("GET")
   const [headers, setHeaders] = useState<Array<{ key: string; value: string }>>([])
@@ -113,6 +115,19 @@ export function AgenticConfigStep({ onNext, onBack }: AgenticConfigStepProps) {
         return
       }
 
+      if (baseEndpoint.trim()) {
+        try {
+          new URL(baseEndpoint.trim())
+        } catch {
+          toast({
+            title: "Error",
+            description: "Please enter a valid base endpoint URL (e.g., https://api.example.com)",
+            variant: "destructive",
+          })
+          return
+        }
+      }
+
       setIsLoading(true)
       try {
         const content = await file.text()
@@ -120,6 +135,7 @@ export function AgenticConfigStep({ onNext, onBack }: AgenticConfigStepProps) {
           inputType: "file",
           fileContent: content,
           fileName: file.name,
+          baseEndpoint: baseEndpoint.trim() || undefined,
           agenticConfig,
         })
       } catch (error) {
@@ -222,29 +238,47 @@ export function AgenticConfigStep({ onNext, onBack }: AgenticConfigStepProps) {
       </Card>
 
       {inputType === "file" && (
-        <Card className="p-6">
-          <Label htmlFor="file-upload" className="mb-4 block text-base font-semibold">
-            {t("uploadSpec")}
-          </Label>
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <Input
-                id="file-upload"
-                type="file"
-                accept=".json,.yaml,.yml"
-                onChange={handleFileChange}
-                className="flex-1"
-              />
-              <span className="text-2xl text-muted-foreground">📤</span>
-            </div>
-            {file && (
-              <div className="rounded-md bg-accent p-3 text-sm">
-                <span className="font-medium">Selected:</span> {file.name}
+        <>
+          <Card className="p-6">
+            <Label htmlFor="file-upload" className="mb-4 block text-base font-semibold">
+              {t("uploadSpec")}
+            </Label>
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <Input
+                  id="file-upload"
+                  type="file"
+                  accept=".json,.yaml,.yml"
+                  onChange={handleFileChange}
+                  className="flex-1"
+                />
+                <span className="text-2xl text-muted-foreground">📤</span>
               </div>
-            )}
-            <p className="text-xs text-muted-foreground">{t("supportedFormats")}</p>
-          </div>
-        </Card>
+              {file && (
+                <div className="rounded-md bg-accent p-3 text-sm">
+                  <span className="font-medium">Selected:</span> {file.name}
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">{t("supportedFormats")}</p>
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <Label htmlFor="base-endpoint" className="mb-4 block text-base font-semibold">
+              {t("baseEndpoint")} <span className="text-sm font-normal text-muted-foreground">({t("optional")})</span>
+            </Label>
+            <div className="space-y-4">
+              <Input
+                id="base-endpoint"
+                type="url"
+                placeholder="https://api.example.com"
+                value={baseEndpoint}
+                onChange={(e) => setBaseEndpoint(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">{t("baseEndpointDesc")}</p>
+            </div>
+          </Card>
+        </>
       )}
 
       {inputType === "manual" && (

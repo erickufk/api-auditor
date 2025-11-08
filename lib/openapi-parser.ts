@@ -72,7 +72,25 @@ export function parseOpenAPISpec(fileContent: string): ParsedOpenAPISpec {
 }
 
 export function buildEndpointUrl(baseUrl: string, path: string, pathParams?: Record<string, string>): string {
-  let url = baseUrl + path
+  let cleanBaseUrl = baseUrl.trim()
+
+  // If baseUrl is empty or invalid, throw an error
+  if (!cleanBaseUrl) {
+    throw new Error(
+      'Base URL is required but not provided in OpenAPI specification. Please ensure the spec includes a "servers" section with a valid URL.',
+    )
+  }
+
+  // Remove trailing slash from baseUrl if present
+  cleanBaseUrl = cleanBaseUrl.replace(/\/$/, "")
+
+  // Ensure path starts with /
+  let cleanPath = path
+  if (!cleanPath.startsWith("/")) {
+    cleanPath = "/" + cleanPath
+  }
+
+  let url = cleanBaseUrl + cleanPath
 
   // Replace path parameters
   if (pathParams) {
