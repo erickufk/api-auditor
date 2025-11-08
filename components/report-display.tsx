@@ -101,69 +101,69 @@ export function ReportDisplay({
   }, [agenticResult, report])
 
   const generateFullTextReport = () => {
-    let textReport = `API SECURITY AUDIT REPORT\n`
+    let textReport = `${t("securityReport").toUpperCase()}\n`
     textReport += `${"=".repeat(80)}\n\n`
 
     // Project Information
     if (projectMetadata) {
-      textReport += `PROJECT INFORMATION\n`
+      textReport += `${t("projectInformation").toUpperCase()}\n`
       textReport += `${"-".repeat(80)}\n`
-      textReport += `Project Name: ${projectMetadata.name}\n`
-      textReport += `Description: ${projectMetadata.description}\n\n`
+      textReport += `${t("projectName")}: ${projectMetadata.name}\n`
+      textReport += `${t("projectDescription")}: ${projectMetadata.description}\n\n`
     }
 
     // Scan Details
-    textReport += `SCAN DETAILS\n`
+    textReport += `${t("reportDetails").toUpperCase()}\n`
     textReport += `${"-".repeat(80)}\n`
-    textReport += `Scan ID: ${report.scan_id}\n`
-    textReport += `Date: ${new Date(report.timestamp).toLocaleString()}\n`
-    textReport += `API Name: ${report.api_name}\n`
-    textReport += `Overall Risk Score: ${report.overall_risk_score.toUpperCase()}\n`
-    textReport += `Endpoints Scanned: ${report.endpoints_scanned}\n`
-    textReport += `Vulnerabilities Found: ${report.vulnerabilities_found}\n\n`
+    textReport += `${t("scanId")}: ${report.scan_id}\n`
+    textReport += `${t("testedOn")}: ${new Date(report.timestamp).toLocaleString()}\n`
+    textReport += `${t("apiName")}: ${report.api_name}\n`
+    textReport += `${t("overallRisk")}: ${report.overall_risk_score.toUpperCase()}\n`
+    textReport += `${t("endpointsScanned")}: ${report.endpoints_scanned}\n`
+    textReport += `${t("totalVulnerabilities")}: ${report.vulnerabilities_found}\n\n`
 
     // Tested Endpoints
     if (testedEndpoints.length > 0) {
-      textReport += `ENDPOINTS TESTED (${testedEndpoints.length})\n`
+      textReport += `${t("endpointsTested").toUpperCase()} (${testedEndpoints.length})\n`
       textReport += `${"-".repeat(80)}\n`
       testedEndpoints.forEach((endpoint, idx) => {
         textReport += `${idx + 1}. ${endpoint.method} ${endpoint.url}\n`
-        textReport += `   Issues Found: ${endpoint.issuesCount}\n`
+        textReport += `   ${t("issues")}: ${endpoint.issuesCount}\n`
       })
       textReport += `\n`
     }
 
     // Severity Summary
-    textReport += `SEVERITY BREAKDOWN\n`
+    textReport += `${t("severityBreakdown").toUpperCase()}\n`
     textReport += `${"-".repeat(80)}\n`
-    textReport += `Critical: ${report.summary.critical}\n`
-    textReport += `High: ${report.summary.high}\n`
-    textReport += `Medium: ${report.summary.medium}\n`
-    textReport += `Low: ${report.summary.low}\n`
-    textReport += `Info: ${report.summary.info}\n\n`
+    textReport += `${t("critical")}: ${report.summary.critical}\n`
+    textReport += `${t("high")}: ${report.summary.high}\n`
+    textReport += `${t("medium")}: ${report.summary.medium}\n`
+    textReport += `${t("low")}: ${report.summary.low}\n`
+    textReport += `${t("info")}: ${report.summary.info}\n\n`
 
     // Agentic Testing Iterations
     if (agenticResult?.iterations && agenticResult.iterations.length > 0) {
-      textReport += `AGENTIC TESTING ITERATIONS (${agenticResult.iterations.length})\n`
+      textReport += `${t("agenticTestingIterations").toUpperCase()} (${agenticResult.iterations.length})\n`
       textReport += `${"-".repeat(80)}\n`
-      textReport += `Stopped Reason: ${agenticResult.stoppedReason.replace(/_/g, " ")}\n\n`
+      textReport += `${agenticResult.stoppedReason.replace(/_/g, " ")}\n\n`
 
       agenticResult.iterations.forEach((iteration: any, idx: number) => {
-        textReport += `Iteration ${iteration.iterationNumber}\n`
+        textReport += `${t("iteration")} ${iteration.iterationNumber}\n`
         textReport += `${"-".repeat(40)}\n`
-        textReport += `Request:\n`
-        textReport += `  Method: ${iteration.request.method}\n`
+        textReport += `${t("requestDetails")}:\n`
+        textReport += `  ${t("httpMethod")}: ${iteration.request.method}\n`
         textReport += `  URL: ${iteration.request.url}\n`
-        textReport += `  Headers: ${JSON.stringify(iteration.request.headers, null, 2)}\n`
+        textReport += `  ${t("headers")}: ${JSON.stringify(iteration.request.headers, null, 2)}\n`
         if (iteration.request.body) {
-          textReport += `  Body: ${iteration.request.body}\n`
+          textReport += `  ${t("body")}: ${iteration.request.body}\n`
         }
-        textReport += `\nResponse:\n`
-        textReport += `  Status: ${iteration.response.status} ${iteration.response.statusText}\n`
-        textReport += `  Body: ${iteration.response.body.substring(0, 1000)}${iteration.response.body.length > 1000 ? "..." : ""}\n`
-        textReport += `\nAI Analysis:\n${iteration.analysis}\n`
-        textReport += `\nAgent Reasoning:\n${iteration.reasoning}\n`
-        textReport += `\nVulnerabilities Found: ${iteration.vulnerabilitiesFound.length}\n`
+        textReport += `\n${t("response")}:\n`
+        textReport += `  ${t("status")}: ${iteration.response.status} ${iteration.response.statusText}\n`
+        textReport += `  ${t("body")}: ${iteration.response.body.substring(0, 1000)}${iteration.response.body.length > 1000 ? "..." : ""}\n`
+        textReport += `\n${t("aiAnalysis")}:\n${iteration.analysis}\n`
+        textReport += `\n${t("agentReasoning")}:\n${iteration.reasoning}\n`
+        textReport += `\n${t("vulnerabilitiesFound")}: ${iteration.vulnerabilitiesFound.length}\n`
         if (iteration.vulnerabilitiesFound.length > 0) {
           iteration.vulnerabilitiesFound.forEach((vuln: any, vIdx: number) => {
             textReport += `  ${vIdx + 1}. [${vuln.severity.toUpperCase()}] ${vuln.title}\n`
@@ -175,29 +175,29 @@ export function ReportDisplay({
     }
 
     // Vulnerabilities
-    textReport += `VULNERABILITIES FOUND (${report.vulnerabilities.length})\n`
+    textReport += `${t("vulnerabilitiesFoundTitle").toUpperCase()} (${report.vulnerabilities.length})\n`
     textReport += `${"-".repeat(80)}\n\n`
 
     if (report.vulnerabilities.length === 0) {
-      textReport += `No vulnerabilities found. Your API appears to be secure.\n\n`
+      textReport += `${t("noVulnerabilitiesFound")}. ${t("apiSecure")}.\n\n`
     } else {
       report.vulnerabilities.forEach((vuln, index) => {
         textReport += `${index + 1}. ${vuln.title}\n`
-        textReport += `   Severity: ${vuln.severity.toUpperCase()}\n`
-        textReport += `   Description: ${vuln.description}\n`
-        textReport += `   Affected Endpoints: ${vuln.affected_endpoints.join(", ")}\n`
+        textReport += `   ${t("severity")}: ${vuln.severity.toUpperCase()}\n`
+        textReport += `   ${t("description")}: ${vuln.description}\n`
+        textReport += `   ${t("affectedEndpoints")}: ${vuln.affected_endpoints.join(", ")}\n`
         if (vuln.proof_of_concept) {
-          textReport += `   Proof of Concept:\n${vuln.proof_of_concept}\n`
+          textReport += `   ${t("proofOfConcept")}:\n${vuln.proof_of_concept}\n`
         }
-        textReport += `   Remediation: ${vuln.remediation}\n`
-        if (vuln.cwe_id) textReport += `   CWE ID: ${vuln.cwe_id}\n`
-        if (vuln.cvss_score) textReport += `   CVSS Score: ${vuln.cvss_score}\n`
+        textReport += `   ${t("remediation")}: ${vuln.remediation}\n`
+        if (vuln.cwe_id) textReport += `   ${t("cweId")}: ${vuln.cwe_id}\n`
+        if (vuln.cvss_score) textReport += `   ${t("cvssScore")}: ${vuln.cvss_score}\n`
         textReport += `\n`
       })
     }
 
     // Recommendations
-    textReport += `RECOMMENDATIONS\n`
+    textReport += `${t("recommendations").toUpperCase()}\n`
     textReport += `${"-".repeat(80)}\n`
     report.recommendations.forEach((rec, index) => {
       textReport += `${index + 1}. ${rec}\n`
@@ -206,25 +206,25 @@ export function ReportDisplay({
 
     // Recommended Tests
     if (report.recommendedTests && report.recommendedTests.length > 0) {
-      textReport += `RECOMMENDED FOLLOW-UP TESTS\n`
+      textReport += `${t("recommendedFollowUpTests").toUpperCase()}\n`
       textReport += `${"-".repeat(80)}\n`
       report.recommendedTests.forEach((test, index) => {
         textReport += `${index + 1}. ${test.description}\n`
-        textReport += `   Type: ${test.testType}\n`
-        textReport += `   Payload: ${test.payload}\n`
-        textReport += `   Reasoning: ${test.reasoning}\n\n`
+        textReport += `   ${t("testType")}: ${test.testType}\n`
+        textReport += `   ${t("payload")}: ${test.payload}\n`
+        textReport += `   ${t("reasoning")}: ${test.reasoning}\n\n`
       })
     }
 
     // Potential Vulnerabilities
     if (report.potentialVulnerabilities && report.potentialVulnerabilities.length > 0) {
-      textReport += `POTENTIAL VULNERABILITIES\n`
+      textReport += `${t("potentialVulnerabilities").toUpperCase()}\n`
       textReport += `${"-".repeat(80)}\n`
       report.potentialVulnerabilities.forEach((vuln, index) => {
         textReport += `${index + 1}. ${vuln.type}\n`
-        textReport += `   Likelihood: ${vuln.likelihood}\n`
-        textReport += `   Test Approach: ${vuln.testApproach}\n`
-        textReport += `   Reasoning: ${vuln.reasoning}\n\n`
+        textReport += `   ${t("likelihood")}: ${vuln.likelihood}\n`
+        textReport += `   ${t("testApproach")}: ${vuln.testApproach}\n`
+        textReport += `   ${t("reasoning")}: ${vuln.reasoning}\n\n`
       })
     }
 
@@ -251,8 +251,8 @@ export function ReportDisplay({
     document.body.removeChild(link)
     URL.revokeObjectURL(url)
     toast({
-      title: "Success",
-      description: "Report downloaded successfully",
+      title: t("success"),
+      description: t("reportDownloaded"),
     })
   }
 
@@ -268,8 +268,8 @@ export function ReportDisplay({
     document.body.removeChild(link)
     URL.revokeObjectURL(url)
     toast({
-      title: "Success",
-      description: "Full text report downloaded successfully",
+      title: t("success"),
+      description: t("fullTextReportDownloaded"),
     })
   }
 
@@ -277,34 +277,34 @@ export function ReportDisplay({
     <div className="mx-auto max-w-6xl">
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h2 className="mb-2 text-balance text-3xl font-bold text-foreground">Security Audit Report</h2>
-          <p className="text-pretty text-muted-foreground">Comprehensive analysis of your API security</p>
+          <h2 className="mb-2 text-balance text-3xl font-bold text-foreground">{t("securityReport")}</h2>
+          <p className="text-pretty text-muted-foreground">{t("comprehensiveAnalysis")}</p>
         </div>
         <div className="flex gap-2">
           <Button onClick={onTestAnother} variant="default">
-            Test Another Endpoint
+            {t("testAnotherEndpoint")}
           </Button>
           <Button onClick={onStartNew} variant="outline">
-            New Audit
+            {t("newAudit")}
           </Button>
         </div>
       </div>
 
       {projectMetadata && (
         <Card className="mb-6 p-6">
-          <h3 className="mb-4 text-xl font-semibold text-foreground">Project Information</h3>
+          <h3 className="mb-4 text-xl font-semibold text-foreground">{t("projectInformation")}</h3>
           <div className="space-y-3">
             <div className="flex items-start gap-3">
               <span className="mt-0.5 text-xl">💼</span>
               <div>
-                <p className="text-sm font-medium text-foreground">Project Name</p>
+                <p className="text-sm font-medium text-foreground">{t("projectName")}</p>
                 <p className="text-sm text-muted-foreground">{projectMetadata.name}</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
               <span className="mt-0.5 text-xl">📝</span>
               <div>
-                <p className="text-sm font-medium text-foreground">Description</p>
+                <p className="text-sm font-medium text-foreground">{t("projectDescription")}</p>
                 <p className="text-sm text-muted-foreground">{projectMetadata.description}</p>
               </div>
             </div>
@@ -314,7 +314,9 @@ export function ReportDisplay({
 
       {testedEndpoints.length > 0 && (
         <Card className="mb-6 p-6">
-          <h3 className="mb-4 text-xl font-semibold text-foreground">Endpoints Tested ({testedEndpoints.length})</h3>
+          <h3 className="mb-4 text-xl font-semibold text-foreground">
+            {t("endpointsTested")} ({testedEndpoints.length})
+          </h3>
           <div className="space-y-2">
             {testedEndpoints.map((endpoint, idx) => (
               <div key={idx} className="flex items-center gap-3 rounded-lg border border-border p-3">
@@ -325,7 +327,7 @@ export function ReportDisplay({
                   <span className="font-bold text-primary">{endpoint.method}</span> {endpoint.url}
                 </code>
                 <Badge className={endpoint.issuesCount > 0 ? "bg-destructive" : "bg-success"}>
-                  {endpoint.issuesCount} issues
+                  {endpoint.issuesCount} {t("issues")}
                 </Badge>
               </div>
             ))}
@@ -341,7 +343,7 @@ export function ReportDisplay({
               <span className="text-2xl">🛡️</span>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Overall Risk</p>
+              <p className="text-sm text-muted-foreground">{t("overallRisk")}</p>
               <p className={`text-2xl font-bold ${getRiskScoreColor(report.overall_risk_score)}`}>
                 {report.overall_risk_score.toUpperCase()}
               </p>
@@ -355,7 +357,7 @@ export function ReportDisplay({
               <span className="text-2xl">📊</span>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Endpoints Scanned</p>
+              <p className="text-sm text-muted-foreground">{t("endpointsScanned")}</p>
               <p className="text-2xl font-bold text-foreground">{report.endpoints_scanned}</p>
             </div>
           </div>
@@ -367,7 +369,7 @@ export function ReportDisplay({
               <span className="text-2xl">⚠️</span>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Vulnerabilities</p>
+              <p className="text-sm text-muted-foreground">{t("vulnerabilities")}</p>
               <p className="text-2xl font-bold text-foreground">{report.vulnerabilities_found}</p>
             </div>
           </div>
@@ -379,7 +381,7 @@ export function ReportDisplay({
               <span className="text-2xl">📅</span>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Scan Date</p>
+              <p className="text-sm text-muted-foreground">{t("scanDate")}</p>
               <p className="text-sm font-medium text-foreground">{new Date(report.timestamp).toLocaleDateString()}</p>
             </div>
           </div>
@@ -389,13 +391,13 @@ export function ReportDisplay({
       {/* Report Details */}
       <Card className="mb-6 p-6">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-xl font-semibold text-foreground">Report Details</h3>
+          <h3 className="text-xl font-semibold text-foreground">{t("reportDetails")}</h3>
           <div className="flex gap-2">
             <Button onClick={handleDownloadJSON} variant="outline" size="sm">
-              JSON
+              {t("json")}
             </Button>
             <Button onClick={handleDownloadFullTextReport} variant="outline" size="sm">
-              Full TXT Report
+              {t("fullTxtReport")}
             </Button>
           </div>
         </div>
@@ -403,12 +405,12 @@ export function ReportDisplay({
         <div className="grid gap-4 md:grid-cols-2">
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground">#️⃣</span>
-            <span className="text-sm text-muted-foreground">Scan ID:</span>
+            <span className="text-sm text-muted-foreground">{t("scanId")}:</span>
             <span className="font-mono text-sm text-foreground">{report.scan_id}</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground">📄</span>
-            <span className="text-sm text-muted-foreground">API Name:</span>
+            <span className="text-sm text-muted-foreground">{t("apiName")}:</span>
             <span className="text-sm font-medium text-foreground">{report.api_name}</span>
           </div>
         </div>
@@ -416,26 +418,26 @@ export function ReportDisplay({
 
       {/* Severity Summary */}
       <Card className="mb-6 p-6">
-        <h3 className="mb-4 text-xl font-semibold text-foreground">Severity Breakdown</h3>
+        <h3 className="mb-4 text-xl font-semibold text-foreground">{t("severityBreakdown")}</h3>
         <div className="grid gap-3 md:grid-cols-5">
           <div className="flex items-center justify-between rounded-lg border border-border p-3">
-            <span className="text-sm font-medium text-foreground">Critical</span>
+            <span className="text-sm font-medium text-foreground">{t("critical")}</span>
             <Badge variant="destructive">{report.summary.critical}</Badge>
           </div>
           <div className="flex items-center justify-between rounded-lg border border-border p-3">
-            <span className="text-sm font-medium text-foreground">High</span>
+            <span className="text-sm font-medium text-foreground">{t("high")}</span>
             <Badge className="bg-destructive/80">{report.summary.high}</Badge>
           </div>
           <div className="flex items-center justify-between rounded-lg border border-border p-3">
-            <span className="text-sm font-medium text-foreground">Medium</span>
+            <span className="text-sm font-medium text-foreground">{t("medium")}</span>
             <Badge className="bg-warning text-warning-foreground">{report.summary.medium}</Badge>
           </div>
           <div className="flex items-center justify-between rounded-lg border border-border p-3">
-            <span className="text-sm font-medium text-foreground">Low</span>
+            <span className="text-sm font-medium text-foreground">{t("low")}</span>
             <Badge className="bg-warning/60 text-warning-foreground">{report.summary.low}</Badge>
           </div>
           <div className="flex items-center justify-between rounded-lg border border-border p-3">
-            <span className="text-sm font-medium text-foreground">Info</span>
+            <span className="text-sm font-medium text-foreground">{t("info")}</span>
             <Badge variant="secondary">{report.summary.info}</Badge>
           </div>
         </div>
@@ -443,9 +445,9 @@ export function ReportDisplay({
 
       {agenticResult && agenticResult.iterations && agenticResult.iterations.length > 0 && (
         <Card className="mb-6 p-6">
-          <h3 className="mb-4 text-xl font-semibold text-foreground">Agentic Testing Iterations</h3>
+          <h3 className="mb-4 text-xl font-semibold text-foreground">{t("agenticTestingIterations")}</h3>
           <p className="mb-4 text-sm text-muted-foreground">
-            The AI agent performed {agenticResult.iterations.length} iterations of autonomous testing. Stopped reason:{" "}
+            {t("aiAgentPerformed")} {agenticResult.iterations.length} {t("iterationsOfTesting")}{" "}
             {agenticResult.stoppedReason.replace(/_/g, " ")}
           </p>
           <Accordion type="single" collapsible className="w-full">
@@ -453,19 +455,21 @@ export function ReportDisplay({
               <AccordionItem key={idx} value={`iteration-${idx}`}>
                 <AccordionTrigger className="hover:no-underline">
                   <div className="flex flex-1 items-center gap-3 text-left">
-                    <Badge variant="outline">Iteration {iteration.iterationNumber}</Badge>
+                    <Badge variant="outline">
+                      {t("iteration")} {iteration.iterationNumber}
+                    </Badge>
                     <span className="font-mono text-sm text-muted-foreground">
                       {iteration.request.method} {iteration.request.url}
                     </span>
                     <Badge className={iteration.vulnerabilitiesFound.length > 0 ? "bg-destructive" : "bg-success"}>
-                      {iteration.vulnerabilitiesFound.length} vulnerabilities
+                      {iteration.vulnerabilitiesFound.length} {t("vulnerabilitiesFound")}
                     </Badge>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-4 pt-4">
                     <div>
-                      <p className="mb-1 text-sm font-medium text-foreground">Request Details</p>
+                      <p className="mb-1 text-sm font-medium text-foreground">{t("requestDetails")}</p>
                       <pre className="overflow-x-auto rounded-lg bg-muted p-3 text-xs text-muted-foreground">
                         {JSON.stringify(
                           {
@@ -483,11 +487,11 @@ export function ReportDisplay({
                     <Separator />
 
                     <div>
-                      <p className="mb-1 text-sm font-medium text-foreground">Response</p>
+                      <p className="mb-1 text-sm font-medium text-foreground">{t("response")}</p>
                       <pre className="overflow-x-auto rounded-lg bg-muted p-3 text-xs text-muted-foreground">
-                        Status: {iteration.response.status} {iteration.response.statusText}
+                        {t("status")}: {iteration.response.status} {iteration.response.statusText}
                         {"\n"}
-                        Body: {iteration.response.body.substring(0, 500)}
+                        {t("body")}: {iteration.response.body.substring(0, 500)}
                         {iteration.response.body.length > 500 ? "..." : ""}
                       </pre>
                     </div>
@@ -495,14 +499,14 @@ export function ReportDisplay({
                     <Separator />
 
                     <div>
-                      <p className="mb-1 text-sm font-medium text-foreground">AI Analysis</p>
+                      <p className="mb-1 text-sm font-medium text-foreground">{t("aiAnalysis")}</p>
                       <p className="text-sm text-muted-foreground">{iteration.analysis}</p>
                     </div>
 
                     <Separator />
 
                     <div>
-                      <p className="mb-1 text-sm font-medium text-foreground">Agent Reasoning</p>
+                      <p className="mb-1 text-sm font-medium text-foreground">{t("agentReasoning")}</p>
                       <p className="text-sm text-muted-foreground">{iteration.reasoning}</p>
                     </div>
 
@@ -511,7 +515,7 @@ export function ReportDisplay({
                         <Separator />
                         <div>
                           <p className="mb-2 text-sm font-medium text-foreground">
-                            Vulnerabilities Found in This Iteration
+                            {t("vulnerabilitiesFoundInIteration")}
                           </p>
                           <div className="space-y-2">
                             {iteration.vulnerabilitiesFound.map((vuln: any, vIdx: number) => (
@@ -622,12 +626,12 @@ export function ReportDisplay({
       )}
 
       <Card className="mb-6 p-6">
-        <h3 className="mb-4 text-xl font-semibold text-foreground">Vulnerabilities Found</h3>
+        <h3 className="mb-4 text-xl font-semibold text-foreground">{t("vulnerabilitiesFoundTitle")}</h3>
         {report.vulnerabilities.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-8 text-center">
             <span className="text-5xl">✅</span>
-            <p className="text-lg font-medium text-foreground">No vulnerabilities found</p>
-            <p className="text-sm text-muted-foreground">Your API appears to be secure</p>
+            <p className="text-lg font-medium text-foreground">{t("noVulnerabilitiesFound")}</p>
+            <p className="text-sm text-muted-foreground">{t("apiSecure")}</p>
           </div>
         ) : (
           <Accordion type="single" collapsible className="w-full">
@@ -644,14 +648,14 @@ export function ReportDisplay({
                 <AccordionContent>
                   <div className="space-y-4 pt-4">
                     <div>
-                      <p className="mb-1 text-sm font-medium text-foreground">Description</p>
+                      <p className="mb-1 text-sm font-medium text-foreground">{t("description")}</p>
                       <p className="text-sm text-muted-foreground">{vuln.description}</p>
                     </div>
 
                     <Separator />
 
                     <div>
-                      <p className="mb-2 text-sm font-medium text-foreground">Affected Endpoints</p>
+                      <p className="mb-2 text-sm font-medium text-foreground">{t("affectedEndpoints")}</p>
                       <div className="flex flex-wrap gap-2">
                         {vuln.affected_endpoints.map((endpoint, idx) => (
                           <Badge key={idx} variant="outline" className="font-mono text-xs">
@@ -665,7 +669,7 @@ export function ReportDisplay({
                       <>
                         <Separator />
                         <div>
-                          <p className="mb-1 text-sm font-medium text-foreground">Proof of Concept</p>
+                          <p className="mb-1 text-sm font-medium text-foreground">{t("proofOfConcept")}</p>
                           <pre className="overflow-x-auto rounded-lg bg-muted p-3 text-xs text-muted-foreground">
                             {vuln.proof_of_concept}
                           </pre>
@@ -676,7 +680,7 @@ export function ReportDisplay({
                     <Separator />
 
                     <div>
-                      <p className="mb-1 text-sm font-medium text-foreground">Remediation</p>
+                      <p className="mb-1 text-sm font-medium text-foreground">{t("remediation")}</p>
                       <p className="text-sm text-muted-foreground">{vuln.remediation}</p>
                     </div>
 
@@ -686,13 +690,13 @@ export function ReportDisplay({
                         <div className="flex gap-4">
                           {vuln.cwe_id && (
                             <div>
-                              <p className="mb-1 text-sm font-medium text-foreground">CWE ID</p>
+                              <p className="mb-1 text-sm font-medium text-foreground">{t("cweId")}</p>
                               <Badge variant="outline">{vuln.cwe_id}</Badge>
                             </div>
                           )}
                           {vuln.cvss_score && (
                             <div>
-                              <p className="mb-1 text-sm font-medium text-foreground">CVSS Score</p>
+                              <p className="mb-1 text-sm font-medium text-foreground">{t("cvssScore")}</p>
                               <Badge variant="outline">{vuln.cvss_score}</Badge>
                             </div>
                           )}
@@ -709,7 +713,7 @@ export function ReportDisplay({
 
       {/* Recommendations */}
       <Card className="p-6">
-        <h3 className="mb-4 text-xl font-semibold text-foreground">Recommendations</h3>
+        <h3 className="mb-4 text-xl font-semibold text-foreground">{t("recommendations")}</h3>
         <ul className="space-y-3">
           {report.recommendations.map((rec, index) => (
             <li key={index} className="flex gap-3">
