@@ -90,11 +90,15 @@ export async function POST(request: NextRequest) {
 
     const previousContext =
       previousIterations.length > 0
-        ? `\n\nPrevious iterations:\n${previousIterations
-            .map(
-              (iter: any) =>
-                `Iteration ${iter.iterationNumber}: ${iter.request.method} ${iter.request.url}\nFindings: ${iter.vulnerabilitiesFound.length} vulnerabilities\nReasoning: ${iter.reasoning}`,
-            )
+        ? `\n\n**Previous Iterations and Their Responses:**\n${previousIterations
+            .map((iter: any) => {
+              const responseBody = iter.response?.body?.substring(0, 2000) || "No response body"
+              return `Iteration ${iter.iterationNumber}: ${iter.request.method} ${iter.request.url}
+Response Status: ${iter.response?.status || "N/A"}
+Response Body: ${responseBody}${iter.response?.body?.length > 2000 ? "... (truncated)" : ""}
+Findings: ${iter.vulnerabilitiesFound.length} vulnerabilities
+Reasoning: ${iter.reasoning}`
+            })
             .join("\n\n")}`
         : ""
 
@@ -118,6 +122,15 @@ ${previousContext}
 2. Identify any vulnerabilities found with detailed proof of concept
 3. Generate 2-3 specific follow-up tests to explore further (you can test different endpoints, modify auth, inject payloads, fuzz inputs, etc.)
 4. Decide whether to continue testing or stop
+
+**IMPORTANT - Using Data from Previous Responses:**
+- **Extract real data from previous responses** to make tests more realistic
+- If a previous response contained IDs (user_id, product_id, account_id, etc.), **use those actual values** in path parameters or request bodies
+- Example: If /products returned [{"product_id": "123"}, {"product_id": "456"}], then test /products/123 or /products/456
+- Example: If /users returned {"users": [{"id": 1}, {"id": 2}]}, then test /users/1, /users/2, /users/999 (to test BOLA)
+- **Look for relationships between endpoints**: If you see /accounts and /accounts/{id}/transactions, extract account IDs from the first response to test the second
+- Use actual tokens, session IDs, or other identifiers from responses when available
+- This makes security testing more realistic and helps discover real vulnerabilities like BOLA (Broken Object Level Authorization)
 
 **Testing Guidelines:**
 - ${aggressivenessPrompts[aggressiveness]}
